@@ -15,7 +15,7 @@ draws the screw life-size so you can lay the real one on the screen.
 
 ## Run it
 
-Requires Node 20+.
+Requires Node 22 or newer (the current LTS is fine).
 
 ```bash
 npm install
