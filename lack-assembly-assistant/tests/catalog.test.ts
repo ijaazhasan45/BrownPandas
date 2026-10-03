@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { SM_GUIDE } from "../src/features/smastad/guide";
 import rawGuide from "../src/data/lack-guide.v1.json";
 import { buildCatalog } from "../src/shared/manuals";
 import { validateGuide } from "../src/shared/guideValidation";
@@ -33,7 +34,7 @@ describe("guide catalog", () => {
   });
 
   it("every registered clip is used by the catalog", () => {
-    const used = new Set(guide.steps.flatMap((s) => [s.animationId, ...s.substeps.map((x) => x.animationId)]));
+    const used = new Set([...guide.steps,...SM_GUIDE.steps].flatMap((s) => [s.animationId, ...s.substeps.map((x) => x.animationId)]));
     expect(ANIMATION_IDS.filter((id) => !used.has(id))).toEqual([]);
   });
 });

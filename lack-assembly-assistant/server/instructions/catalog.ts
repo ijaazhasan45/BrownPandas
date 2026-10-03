@@ -1,3 +1,4 @@
+import { SM_GUIDE } from "../../src/features/smastad/guide";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { buildCatalog, type ManualRegistry } from "../../src/shared/manuals";
@@ -8,7 +9,7 @@ const dataDir = fileURLToPath(new URL("../../src/data/", import.meta.url));
 
 export function loadGuides(): Record<string, AssemblyGuide> {
   const raw = JSON.parse(readFileSync(`${dataDir}lack-guide.v1.json`, "utf8"));
-  return buildCatalog([raw], hasAnimation);
+  return buildCatalog([raw,SM_GUIDE], hasAnimation);
 }
 
 export function loadRegistry(): ManualRegistry {

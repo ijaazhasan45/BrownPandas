@@ -94,6 +94,11 @@ describe("learning memory", () => {
     store.recordDifficulty(input);
     store.recordDifficulty(input);
     expect(makeStore().loadProfile().learningNeeds.leg_alignment?.helpEventCount).toBe(1);
+    const reloaded = makeStore();
+    expect(reloaded.loadHelpHistory()).toHaveLength(1);
+    expect(reloaded.loadHelpHistory()[0].stepTitle).toBe(step("leg-1").title);
+    reloaded.resetLearningNeeds();
+    expect(makeStore().loadHelpHistory()).toEqual([]);
   });
 
   it("doesn't expand unrelated skills", () => {
