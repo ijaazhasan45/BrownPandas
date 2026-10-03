@@ -25,10 +25,13 @@ export interface StorageLike {
 
 export class StoreError extends Error {}
 
+export interface HelpHistoryItem { eventId: string; skillId: SkillId; stepTitle: string; guideId: string; observedAt: string; }
+
 interface ProfileEnvelope {
   version: 1;
   profile: UserProfile;
   processedEventIds: string[];
+  history?: HelpHistoryItem[];
 }
 
 interface SessionEnvelope {
@@ -108,7 +111,7 @@ export class ProfileStore {
   // --- Profile -------------------------------------------------------
 
   private freshProfile(): ProfileEnvelope {
-    return { version: 1, profile: { schemaVersion: 1, id: this.newId(), learningNeeds: {} }, processedEventIds: [] };
+    return { version: 1, profile: { schemaVersion: 1, id: this.newId(), learningNeeds: {} }, processedEventIds: [], history: [] };
   }
 
   private envelope(): ProfileEnvelope {
@@ -125,6 +128,7 @@ export class ProfileStore {
       env = {
         version: 1,
         profile: { schemaVersion: 1, id: stored.profile.id, learningNeeds: needs },
+        history: Array.isArray(stored.history) ? stored.history.filter(h => h && isSkillId(h.skillId) && typeof h.stepTitle === "string" && typeof h.observedAt === "string").slice(-30) : [],
         processedEventIds: Array.isArray(stored.processedEventIds) ? stored.processedEventIds.filter((x) => typeof x === "string") : [],
       };
     }
@@ -135,6 +139,8 @@ export class ProfileStore {
   loadProfile(): UserProfile {
     return structuredClone(this.envelope().profile);
   }
+
+  loadHelpHistory(): HelpHistoryItem[] { return structuredClone(this.envelope().history ?? []); }
 
   recordDifficulty(input: { eventId: string; sessionId: string; guideId: string; stepId: string; skillId: SkillId }): UserProfile {
     if (!isSkillId(input.skillId)) throw new StoreError(`Unknown skill ${String(input.skillId)}`);
@@ -153,6 +159,7 @@ export class ProfileStore {
       helpEventCount: (prior?.helpEventCount ?? 0) + 1,
       lastObservedAt: this.now().toISOString(),
     };
+    env.history = [...(env.history ?? []), { eventId: input.eventId, skillId: input.skillId, stepTitle: step.title, guideId: guide.id, observedAt: this.now().toISOString() }].slice(-30);
     env.processedEventIds = [...env.processedEventIds, input.eventId].slice(-MAX_EVENT_IDS);
     this.write(PROFILE_KEY, env);
     return this.loadProfile();
@@ -161,6 +168,7 @@ export class ProfileStore {
   resetLearningNeeds(): UserProfile {
     const env = this.envelope();
     env.profile.learningNeeds = {};
+    env.history = [];
     env.processedEventIds = [];
     this.write(PROFILE_KEY, env);
     return this.loadProfile();
@@ -218,7 +226,7 @@ export class ProfileStore {
 
   /** The stored session for this guide, without creating one. */
   peekSession(guide: AssemblyGuide): BuildSession | null {
-    const stored = this.read<SessionEnvelope>(SESSION_KEY)?.session;
+    const stored = this.read<SessionEnvelope>(`${SESSION_KEY}:${guide.id}`)?.session ?? this.read<SessionEnvelope>(SESSION_KEY)?.session;
     return stored && this.isUsable(stored, guide) ? structuredClone(stored) : null;
   }
 
@@ -260,7 +268,7 @@ export class ProfileStore {
   }
 
   private saveSession() {
-    if (this.session) this.write(SESSION_KEY, { version: 1, session: this.session } satisfies SessionEnvelope);
+    if (this.session) { const envelope={version:1,session:this.session} satisfies SessionEnvelope;this.write(SESSION_KEY,envelope);this.write(`${SESSION_KEY}:${this.session.guideId}`,envelope); }
   }
 
   private requireSession(sessionId: string): BuildSession {

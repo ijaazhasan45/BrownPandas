@@ -39,7 +39,7 @@ async function readError(res: Response): Promise<ApiError> {
 
 export async function loadManual(file: File, signal?: AbortSignal): Promise<AssemblyGuide> {
   if (file.size > 10 * 1024 * 1024) {
-    throw new ServiceError({ code: "INVALID_PDF", message: "That file is larger than 10 MB. The LACK instructions are much smaller." });
+    throw new ServiceError({ code: "INVALID_PDF", message: "That file is larger than the supported 10 MB upload limit." });
   }
   if (LOCAL_RECOGNITION) {
     const bytes = new Uint8Array(await file.arrayBuffer());

@@ -40,7 +40,7 @@ export function recognize(
       ok: false,
       code: "UNSUPPORTED_MANUAL",
       message:
-        "This PDF isn't one we support yet. Upload the LACK side table instructions (document AA-2606170-1) exactly as downloaded from IKEA, or use the sample guide.",
+        "This PDF isn't one we support yet. Choose LACK or the prepared SMÅSTAD desk/storage guide from the catalogue, or upload its registered PDF.",
     };
   }
   return { ok: true, guide };

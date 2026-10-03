@@ -1,5 +1,7 @@
+import { PreferencesPanel } from "./PreferencesPanel";
 import { useState } from "react";
 import type { SkillId, UserProfile } from "../../shared/contracts";
+import { profileStore } from "../profile/profileStore";
 import { SKILL_LABELS } from "../../shared/skills";
 
 export function MemoryPanel({
@@ -21,7 +23,7 @@ export function MemoryPanel({
   return (
     <aside className="memory" aria-labelledby="memory-heading">
       <div className="memory-head">
-        <h2 id="memory-heading">What the app remembers</h2>
+        <h2 id="memory-heading">Your builder profile</h2>
         <button type="button" className="link-btn" onClick={onClose}>
           Close
         </button>
@@ -31,6 +33,8 @@ export function MemoryPanel({
           ? "Saved in this browser on this device only. Nothing is sent to an account."
           : "This browser isn't allowing storage, so memory lasts only until you close the page."}
       </p>
+      <PreferencesPanel />
+      <h3>Your saved struggles</h3>
       {needs.length ? (
         <ul className="needs">
           {needs.map(([skill, need]) => (
@@ -47,6 +51,7 @@ export function MemoryPanel({
         <p className="empty">Nothing yet. When you confirm what a step's trouble was, it shows up here.</p>
       )}
 
+      {profileStore.loadHelpHistory().length > 0 && <section className="help-history"><h3>Recent learning moments</h3><ol>{profileStore.loadHelpHistory().slice(-5).reverse().map(item=><li key={item.eventId}><strong>{item.stepTitle}</strong><span>{SKILL_LABELS[item.skillId]} · {new Date(item.observedAt).toLocaleDateString(undefined,{month:"short",day:"numeric"})}</span></li>)}</ol></section>}
       <div className="memory-actions">
         {confirming === "new" ? (
           <div className="confirm" role="group" aria-label="Confirm new build">

@@ -19,11 +19,11 @@ export function CompleteScreen({
       <div className="complete-mark" aria-hidden="true">
         <CheckIcon width={40} height={40} />
       </div>
-      <h1 tabIndex={-1}>Your LACK side table is assembled</h1>
+      <h1 tabIndex={-1}>{guide.productName} is assembled</h1>
       <p className="lede">All {guide.steps.length} steps are checked off.</p>
 
       <section className="notes" aria-labelledby="notes-heading">
-        <h2 id="notes-heading">Using your table</h2>
+        <h2 id="notes-heading">Before using your product</h2>
         <p className="small">From the usage notes in the IKEA manual ({guide.manualDocumentId}):</p>
         <ul>
           {guide.usageNotes.map((n) => (

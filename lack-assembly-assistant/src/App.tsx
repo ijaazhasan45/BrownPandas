@@ -4,20 +4,28 @@ import { StartScreen } from "./features/assembly-ui/StartScreen";
 import { AssemblyScreen, loadViewer } from "./features/assembly-ui/AssemblyScreen";
 import { CompleteScreen } from "./features/assembly-ui/CompleteScreen";
 import { MemoryPanel } from "./features/assembly-ui/MemoryPanel";
-import { isBuildComplete, profileStore } from "./features/profile/profileStore";
+import { accessibleStepIds, isBuildComplete, profileStore } from "./features/profile/profileStore";
+import { GUIDES } from "./data/catalog";
 import { loadSampleGuide } from "./features/instructions/instructionService";
+
+import { BuildSidebar } from "./features/assembly-ui/BuildSidebar";
+import { BuildIcon } from "./features/assembly-ui/BuildIcon";
+
+import { useBuilderPreferences } from "./features/profile/preferences";
 
 type Screen = "start" | "assembly" | "complete";
 
 function initialState(): { screen: Screen; guide: AssemblyGuide | null; session: BuildSession | null } {
   // Resume an active build after reload. The reviewed guide is bundled with the app.
-  const guide = loadSampleGuide();
+  const savedId=(()=>{try{return localStorage.getItem("buildwise:active-guide");}catch{return null;}})();
+  const guide = savedId&&GUIDES[savedId]?GUIDES[savedId]:loadSampleGuide();
   if (!profileStore.peekSession(guide)) return { screen: "start", guide: null, session: null };
   const session = profileStore.loadOrCreateSession(guide);
   return { screen: isBuildComplete(guide, session) ? "complete" : "assembly", guide, session };
 }
 
 export default function App() {
+  const preferences = useBuilderPreferences();
   const [{ screen, guide, session }, setState] = useState(initialState);
   const [profile, setProfile] = useState<UserProfile>(() => profileStore.loadProfile());
   const [memoryOpen, setMemoryOpen] = useState(false);
@@ -30,6 +38,7 @@ export default function App() {
 
   const begin = useCallback(
     (g: AssemblyGuide) => {
+      try {localStorage.setItem("buildwise:active-guide",g.id);}catch {/* Visit remains usable. */}
       const s = profileStore.loadOrCreateSession(g);
       setState({ screen: isBuildComplete(g, s) ? "complete" : "assembly", guide: g, session: s });
       announce(`Opened the ${g.productName} guide.`);
@@ -58,43 +67,21 @@ export default function App() {
   }, [screen, session?.id]);
 
   useEffect(() => {
-    document.title = screen === "start" ? "LACK Assembly Assistant" : `${guide?.productName.split(",")[0] ?? "LACK"} · Assembly Assistant`;
+    document.title = screen === "start" ? "buildwise · LACK Assembly Guide" : `${guide?.productName.split(",")[0] ?? "LACK"} · Assembly Assistant`;
   }, [screen, guide]);
 
   const needCount = Object.keys(profile.learningNeeds).length;
-  const doneCount = session?.completedStepIds.length ?? 0;
 
   return (
-    <div className="app">
+    <div className="app" data-text-size={preferences.textSize}>
       <a className="skip" href="#main">
         Skip to content
       </a>
       <header className="topbar">
-        <div className="brand">
-          <span className="brand-mark" aria-hidden="true" />
-          <span className="brand-name">Assembly Assistant</span>
-          {guide && screen !== "start" ? <span className="brand-product">{guide.productName.split(",")[0]}</span> : null}
-        </div>
-        {guide && session && screen !== "start" ? (
-          <div className="progress" aria-label={`${doneCount} of ${guide.steps.length} steps complete`}>
-            <span className="progress-bar" aria-hidden="true">
-              <span style={{ width: `${(doneCount / guide.steps.length) * 100}%` }} />
-            </span>
-            <span className="mono">
-              {doneCount}/{guide.steps.length}
-            </span>
-          </div>
-        ) : null}
-        <div className="topbar-actions">
-          {guide && screen !== "start" ? (
-            <a className="link-btn" href={guide.manualUrl} target="_blank" rel="noreferrer">
-              Manual PDF
-            </a>
-          ) : null}
-          <button type="button" className="btn btn-small" onClick={() => setMemoryOpen((o) => !o)} aria-expanded={memoryOpen}>
-            Memory{needCount ? ` (${needCount})` : ""}
-          </button>
-        </div>
+        <div className="brand"><span className="brand-mark"><BuildIcon name="layers" /></span><span className="brand-name">buildwise<span>.</span></span></div>
+        <button type="button" className="btn catalog-nav" onClick={() => setState({screen:"start",guide:null,session:null})}>Catalogue</button>
+        <p className="brand-tagline">A little guidance. A lot of confidence.</p>
+        <button type="button" className="learning-button" onClick={() => setMemoryOpen((o) => !o)} aria-expanded={memoryOpen}><BuildIcon name="brain" /> Your profile <span>{needCount}</span></button>
       </header>
 
       {memoryOpen ? (
@@ -110,8 +97,14 @@ export default function App() {
         />
       ) : null}
 
+      <div className="build-layout">
+      <BuildSidebar guide={guide ?? loadSampleGuide()} session={session} onNewBuild={newBuild} onSelect={(id) => {
+        if (!guide || !session || !accessibleStepIds(guide, session).has(id)) return;
+        setState({screen: "assembly", guide, session: profileStore.saveViewedStep(session.id, id)});
+      }} />
+      <div className="build-content">
       {screen === "start" || !guide || !session ? (
-        <StartScreen onGuide={(g) => begin(g)} />
+        <StartScreen onPreview={g=>setState(st=>({...st,guide:g}))} onGuide={(g) => begin(g)} />
       ) : screen === "assembly" ? (
         <AssemblyScreen
           key={session.id}
@@ -138,6 +131,7 @@ export default function App() {
         />
       )}
 
+      </div></div>
       <div className="sr-only" aria-live="polite" role="status">
         {announcement}
       </div>

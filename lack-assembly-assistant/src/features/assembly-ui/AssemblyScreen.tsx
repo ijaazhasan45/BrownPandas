@@ -12,6 +12,11 @@ import { accessibleStepIds, firstIncompleteIndex, getAdaptation, isBuildComplete
 import { HelpPanel, SubstepList, type HelpState } from "./HelpPanel";
 import { CheckIcon, LockIcon, XIcon } from "./icons";
 
+import { ConnectionTeaching } from "./ConnectionTeaching";
+import { recordSignal, needsFocusedGuidance, readSignals } from "../profile/connectionSignals";
+import { SM_ACTIONS } from "../smastad/timeline";
+import { preferencesStore, useBuilderPreferences, type BuilderPreferences } from "../profile/preferences";
+
 function newRequestId(): string {
   try {
     return crypto.randomUUID();
@@ -37,17 +42,28 @@ export function AssemblyScreen({
   onComplete: () => void;
   onAnnounce: (text: string) => void;
 }) {
+  const preferences = useBuilderPreferences();
   const step = guide.steps.find((s) => s.id === session.viewedStepId) ?? guide.steps[0];
+  const smAction=guide.id.startsWith("smastad-")?SM_ACTIONS.find(a=>a.id===step.id):undefined;
   const index = step.order;
   const frontier = firstIncompleteIndex(guide, session);
   const accessible = useMemo(() => accessibleStepIds(guide, session), [guide, session]);
   const isDone = session.completedStepIds.includes(step.id);
   const adaptation = useMemo(() => getAdaptation(step, profile), [step, profile]);
 
+  const [prepared,setPrepared]=useState(false);
+  const [closeUp,setCloseUp]=useState(false);
+  const [xray,setXray]=useState(false);
+  const [finishToken,setFinishToken]=useState(0);
+  const [extra,setExtra]=useState(false);
+  const [replayCount,setReplayCount]=useState(0);
+  const tool=smAction?.tool ?? "No separate tool · assemble by hand";
+  function replaySignal(){const signal=recordSignal(guide.id,step.id,"replays");setReplayCount(signal.replays);if(needsFocusedGuidance(signal)){setCloseUp(true);preferencesStore.update({speed:.5});}}
+  function exportSignals(){const rows=readSignals().filter(r=>r.guideId===guide.id).sort((a,b)=>b.replays-a.replays);const blob=new Blob([JSON.stringify({product:guide.productName,signals:rows,note:"Replay counts are attention signals, not confirmed mistakes. No customer identity or chat included."},null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="assembly-feedback.json";a.click();URL.revokeObjectURL(url);}
   const [help, setHelp] = useState<HelpState | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
   const [activeSubstepId, setActiveSubstepId] = useState<string | null>(null);
-  const [detailsOpen, setDetailsOpen] = useState(adaptation.expanded);
+  const [detailsOpen, setDetailsOpen] = useState(adaptation.expanded || preferences.detail === "always");
   const [replayToken] = useState(0);
   const [viewerError, setViewerError] = useState<string | null>(null);
   const [stepsOpen, setStepsOpen] = useState(false);
@@ -62,10 +78,13 @@ export function AssemblyScreen({
   useEffect(() => {
     active.current?.controller?.abort();
     active.current = null;
+    const remembered=readSignals().find(r=>r.guideId===guide.id&&r.stepId===step.id);
+    setPrepared(false);setCloseUp((remembered?.replays??0)>=3);setXray(false);setExtra(false);setReplayCount(remembered?.replays??0);setFinishToken(0);
+    if((remembered?.replays??0)>=3)preferencesStore.update({speed:.5});
     setHelp(null);
     setHelpOpen(false);
     setActiveSubstepId(null);
-    setDetailsOpen(getAdaptation(step, profileStore.loadProfile()).expanded);
+    setDetailsOpen(getAdaptation(step, profileStore.loadProfile()).expanded || preferences.detail === "always");
     speech.stop();
     if (!firstRender.current) headingRef.current?.focus();
     firstRender.current = false;
@@ -73,6 +92,7 @@ export function AssemblyScreen({
   }, [step.id]);
 
   useEffect(() => () => active.current?.controller?.abort(), []);
+  useEffect(() => {setDetailsOpen(adaptation.expanded || preferences.detail === "always");}, [preferences.detail, adaptation.expanded]);
 
   const visibleSubsteps = help?.response.substeps ?? step.substeps;
   const activeSub = activeSubstepId ? [...visibleSubsteps, ...step.substeps].find((s) => s.id === activeSubstepId) : undefined;
@@ -184,6 +204,7 @@ export function AssemblyScreen({
   return (
     <main className="bench" id="main">
       <section className="stage" aria-label="3D view">
+        <div className="scene-topline"><span>Assembly simulation</span><span>{preferences.scene === "room" ? "Daylight room" : "Focus studio"}</span></div>
         <Suspense fallback={<div className="viewer viewer--empty" role="status"><p>Loading the 3D view…</p></div>}>
           <AssemblyViewer
             guideId={guide.id}
@@ -191,6 +212,7 @@ export function AssemblyScreen({
             animationId={animationId}
             highlightedPartIds={highlights}
             replayToken={replayToken}
+            prepared={prepared} closeUp={closeUp} xray={xray} finishToken={finishToken} onReplay={replaySignal}
             onViewerError={setViewerError}
           />
         </Suspense>
@@ -223,9 +245,13 @@ export function AssemblyScreen({
           </h2>
         </div>
 
+        <div className="connection-preflight"><p className="eyebrow">1 · Check before moving</p><strong>{tool}</strong><p>{smAction ? smAction.instruction : "Keep the finished face protected on the mat. The underside holes face upward; the hole in each leg faces the screw."}</p><button className="btn" type="button" onClick={()=>{setPrepared(true);setCloseUp(true);}} disabled={prepared}>{prepared?"Tool and orientation checked":"Checked · start the animation"}</button></div>
+        <div className="pace-choice"><label htmlFor="assembly-pace">Your pace</label><select id="assembly-pace" value={preferences.speed} onChange={e=>preferencesStore.update({speed:Number(e.target.value) as BuilderPreferences["speed"]})}><option value={0.5}>Slow · 0.5×</option><option value={1}>Standard · 1×</option><option value={1.5}>Quick · 1.5×</option></select></div>
         <PartsCallout guide={guide} step={step} onActualSize={setActualSize} />
 
+
         <p className="instruction">{step.instruction}</p>
+        {smAction&&<details className="smastad-reference"><summary>Compare with the manual · page {step.source.page}</summary><a href={`/manuals/loft/${step.source.page}.png`} target="_blank" rel="noreferrer"><img src={`/manuals/loft/${step.source.page}.png`} alt={`SMÅSTAD manual page ${step.source.page}`}/></a><p>Click the diagram to enlarge. Dimensions and hole spacing in the 3D model are visual estimates.</p></details>}
         {speech.supported ? (
           <button
             type="button"
@@ -266,9 +292,12 @@ export function AssemblyScreen({
           </button>
         ) : null}
 
+        <button type="button" className="link-btn" aria-expanded={extra} onClick={()=>{setExtra(!extra);if(!extra){recordSignal(guide.id,step.id,"details");setCloseUp(true);preferencesStore.update({speed:.5});}}}>{extra?"Hide extra guidance":"Show me more detail"}</button>
+        {extra&&<div className="connection-details"><div className="lesson-tabs"><button className="vbtn" aria-pressed={closeUp} onClick={()=>setCloseUp(!closeUp)}>{closeUp?"Whole assembly":"Focus on the connection"}</button><button className="vbtn" aria-pressed={xray} onClick={()=>setXray(!xray)}>{xray?"Restore solid view":"Reveal hidden connections"}</button></div><ConnectionTeaching tool={tool} smastad={!!smAction} twoPeople={smAction?.id==="smastad-step-12"}/><button className="link-btn" onClick={exportSignals}>Export this product’s replay feedback</button><p className="fine-print">Saved on this browser. You choose whether to share the export with the manufacturer.</p></div>}
+        {replayCount>=3&&<p className="adapt-note" role="status">You’ve replayed this connection {replayCount} times. The camera now focuses on it at 0.5× speed. You can change the pace or rotate the view.</p>}
         <div className="check">
           <p className="check-label">Before you continue</p>
-          <p>{step.completionCheck}</p>
+          <p>{step.completionCheck}</p><button className="link-btn" type="button" onClick={()=>{setFinishToken(n=>n+1);setCloseUp(true);}}>Show the finished connection</button>
         </div>
 
         <div className="actions">

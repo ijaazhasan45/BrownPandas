@@ -1,14 +1,21 @@
-import { useRef, useState } from "react";
+import { lazy, Suspense, useRef, useState } from "react";
 import type { AssemblyGuide } from "../../shared/contracts";
-import { SERVICE_MODE, ServiceError, loadManual, loadSampleGuide } from "../instructions/instructionService";
+import { ServiceError, loadManual, loadSampleGuide } from "../instructions/instructionService";
 
+import { SM_GUIDE } from "../smastad/guide";
+import { BuildIcon } from "./BuildIcon";
+import { CheckIcon } from "./icons";
+const AssemblyViewer = lazy(() => import("../viewer/AssemblyViewer").then(m => ({ default: m.AssemblyViewer })));
 const MANUAL_URL = "https://www.ikea.com/us/en/assembly_instructions/lack-side-table-white__AA-2606170-1-100.pdf";
 
-export function StartScreen({ onGuide }: { onGuide: (guide: AssemblyGuide, source: "upload" | "sample") => void }) {
+export function StartScreen({ onGuide,onPreview }: { onPreview?: (guide:AssemblyGuide)=>void; onGuide: (guide: AssemblyGuide, source: "upload" | "sample") => void }) {
   const input = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<"idle" | "reading" | "error">("idle");
   const [message, setMessage] = useState("");
-  const [dragging, setDragging] = useState(false);
+  const [selected,setSelected]=useState<"lack"|"smastad">("lack");
+  const guide = selected==="lack"?loadSampleGuide():SM_GUIDE;
+  const isSmastad=selected==="smastad";
+  const finalStep = guide.steps[guide.steps.length - 1];
 
   async function handle(file: File | undefined) {
     if (!file) return;
@@ -24,86 +31,22 @@ export function StartScreen({ onGuide }: { onGuide: (guide: AssemblyGuide, sourc
   }
 
   return (
-    <main className="start" id="main">
-      <section className="start-intro">
-        <p className="eyebrow">Flat-pack assembly assistant</p>
-        <h1>Build your LACK side table one small step at a time</h1>
-        <p className="lede">
-          Upload the IKEA instructions and follow a 3D walkthrough you can turn, zoom, and replay. When a step is tricky,
-          tap <strong>I need help</strong>. The app remembers what you found hard and adds extra detail the next time that
-          action comes up.
-        </p>
-        <dl className="spec">
-          <div>
-            <dt>Supports</dt>
-            <dd>LACK side table, white, 21⅝ × 21⅝″</dd>
-          </div>
-          <div>
-            <dt>Article</dt>
-            <dd className="mono">304.499.08</dd>
-          </div>
-          <div>
-            <dt>Manual</dt>
-            <dd className="mono">AA-2606170-1</dd>
-          </div>
-        </dl>
-      </section>
-
-      <section className="start-actions" aria-labelledby="upload-heading">
-        <h2 id="upload-heading">Start with your manual</h2>
-        <div
-          className={`dropzone${dragging ? " is-dragging" : ""}`}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragging(true);
-          }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setDragging(false);
-            void handle(e.dataTransfer.files?.[0]);
-          }}
-        >
-          <p>Drop the instructions PDF here, or</p>
-          <button type="button" className="btn btn-primary" onClick={() => input.current?.click()} disabled={status === "reading"}>
-            Choose PDF
-          </button>
-          <input
-            ref={input}
-            id="manual-upload"
-            type="file"
-            accept="application/pdf,.pdf"
-            className="sr-only"
-            onChange={(e) => {
-              void handle(e.target.files?.[0]);
-              e.target.value = "";
-            }}
-          />
-          <p className="small">
-            Use the file exactly as downloaded from{" "}
-            <a href={MANUAL_URL} target="_blank" rel="noreferrer">
-              IKEA's LACK instructions page
-            </a>
-            . Up to 10 MB.
-          </p>
-        </div>
-        <p className={`status ${status === "error" ? "status-error" : ""}`} role={status === "error" ? "alert" : "status"}>
-          {message}
-        </p>
-
-        <div className="sample">
-          <h3>No PDF handy?</h3>
-          <p>Open the same reviewed LACK guide without uploading. Nothing is read from a file.</p>
-          <button type="button" className="btn" onClick={() => onGuide(loadSampleGuide(), "sample")}>
-            Use the sample guide
-          </button>
-        </div>
-        <p className="fine">
-          How recognition works: the app checks that your PDF is the exact supported file, then opens a guide our team
-          prepared from its diagrams. It doesn't generate 3D models from arbitrary manuals.
-          {SERVICE_MODE === "static" ? " This version works offline, so help uses prepared content only." : ""}
-        </p>
-      </section>
+    <main className="welcome" id="main">
+      <div className="welcome-heading"><div><p className="eyebrow">Your assembly companion</p><h1>Let’s build something.</h1><p>Choose a product. Watch every action in 3D.</p></div><button className="btn upload-button" onClick={() => input.current?.click()} disabled={status === "reading"}><BuildIcon name="upload" />{status === "reading" ? "Checking manual…" : "Upload manual"}</button></div>
+      <input ref={input} type="file" accept="application/pdf,.pdf" className="sr-only" aria-label="Upload a supported IKEA manual" onChange={e => {void handle(e.target.files?.[0]); e.target.value="";}} />
+      {message && <p className={`status ${status === "error" ? "status-error" : ""}`} role={status === "error" ? "alert" : "status"}>{message}</p>}
+      <div className="two-product-catalogue" aria-label="Product catalogue"><button className={selected==="lack"?"selected":""} onClick={()=>{setSelected("lack");onPreview?.(loadSampleGuide());}}><strong>LACK</strong><span>Side table · 11 animated steps</span></button><button className={isSmastad?"selected":""} onClick={()=>{setSelected("smastad");onPreview?.(SM_GUIDE);}}><strong>SMÅSTAD</strong><span>Desk + storage · 17 animated steps</span></button></div>
+      <div className="welcome-grid">
+        <section className="product-preview" aria-label="Interactive preview of the finished table">
+          <header><strong><BuildIcon name="box"/>{isSmastad?"SMÅSTAD desk + storage":"LACK side table"}</strong><span>Live 3D room</span></header>
+          <div className="welcome-stage"><p className="preview-caption">{isSmastad?"• Your completed desk layout · existing frame shown for context":"• Your finished table · room simulation"}</p><Suspense fallback={<div className="viewer-fallback">Loading your table…</div>}><AssemblyViewer guideId={guide.id} stepId={finalStep.id} animationId={finalStep.animationId} highlightedPartIds={[]} replayToken={0}/></Suspense></div>
+          <footer><span><BuildIcon name="hand"/>Built at your pace</span><span>{isSmastad?"17 manual actions · individual animations":"9 pieces · 11 guided steps"}</span></footer>
+        </section>
+        <section className="welcome-card"><p className="eyebrow">A good place to start</p><h2>{isSmastad?"Your desk starts here.":"Your table starts here."}</h2><p className="welcome-description">Follow each connection in 3D. If something feels tricky, we’ll break it into smaller steps.</p>
+          <ul className="welcome-benefits"><li><span><BuildIcon name="box"/></span><div><strong>{isSmastad?"Panels + coded hardware":"9 pieces"}</strong><p>{isSmastad?"Connectors, cams, dowels and covers":"1 top, 4 legs, 4 screws"}</p></div></li><li><span><BuildIcon name="hand"/></span><div><strong>{isSmastad?"Watch the tool in 3D":"Hand assembly"}</strong><p>{isSmastad?"Screwdriver, hammer and supplied hex key":"Follow the turning motion"}</p></div></li><li><span><BuildIcon name="brain"/></span><div><strong>Help that remembers</strong><p>Your struggles and preferences, saved</p></div></li></ul>
+          <button className="btn btn-primary start-build" onClick={() => onGuide(guide, "sample")}><CheckIcon/>Use {isSmastad?"SMÅSTAD":"LACK"} guide</button><p className="welcome-note">{isSmastad?"First desk layout from manual AA-2200883-3, pages 5–15. The loft-bed frame must already be assembled.":"Reviewed guide for manual AA-2606170-1."} <a href={isSmastad?"/manuals/loft/manual.pdf":MANUAL_URL} target="_blank" rel="noreferrer">View source manual</a>.</p>
+        </section>
+      </div>
     </main>
   );
 }

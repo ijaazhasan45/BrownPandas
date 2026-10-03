@@ -33,6 +33,10 @@ const GENERIC =
   "Here is this step in smaller pieces. Select a piece to watch only that part of the animation.";
 
 export function explanationFor(step: AssemblyStep, skill: SkillId | null, hasHardware = false): string {
+  if (step.id.startsWith("smastad-")) {
+    const hint=skill==="part_identification"?"Match the hardware code and panel shape to this manual diagram; fittings are not interchangeable.":skill==="part_orientation"?"Compare the hole-facing side and panel orientation to the diagram before connecting parts.":skill==="fastener_alignment"?"Align this fitting with its illustrated hole, then use the indicated tool. Do not force a misaligned connector.":"Select Inspect parts to compare the pieces, then Watch the action close-up to follow this connection.";
+    return `${hint} ${step.instruction}`;
+  }
   if (!skill) return GENERIC;
   if (skill === "part_orientation" && step.id === "upright") return UPRIGHT_ORIENTATION;
   if (skill === "part_identification" && hasHardware) {

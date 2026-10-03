@@ -3,7 +3,7 @@ import type { AssemblyGuide, HelpRequest, HelpResponse } from "./contracts";
 import { PART_IDS, SKILL_IDS } from "./skills";
 
 const skillId = z.enum(SKILL_IDS as unknown as [string, ...string[]]);
-const partId = z.enum(PART_IDS as unknown as [string, ...string[]]);
+const partId = z.union([z.enum(PART_IDS as unknown as [string, ...string[]]),z.string().regex(/^smastad-[a-zA-Z0-9.-]+$/)]);
 
 export const manualReferenceSchema = z.object({
   documentId: z.string().min(1),

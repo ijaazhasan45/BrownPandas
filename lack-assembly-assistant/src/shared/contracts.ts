@@ -8,6 +8,7 @@ export type SkillId =
   | "hand_tightening";
 
 export type PartId =
+  | `smastad-${string}`
   | "tabletop"
   | "leg-1" | "leg-2" | "leg-3" | "leg-4"
   | "fastener-1" | "fastener-2" | "fastener-3" | "fastener-4";

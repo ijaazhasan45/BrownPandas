@@ -1,7 +1,10 @@
-import { Component, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, Component, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows, Edges, Html, OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
+import { SmastadViewer } from "../smastad/SmastadViewer";
+import { AssemblyRoom } from "./AssemblyRoom";
+import { useBuilderPreferences } from "../profile/preferences";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { PartId } from "../../shared/contracts";
 import { CLIPS, DIM, PART_LABELS, evaluateClip, type Clip, type Vec3 } from "./sceneStates";
@@ -12,10 +15,16 @@ export interface AssemblyViewerProps {
   animationId: string;
   highlightedPartIds: PartId[];
   replayToken: number; // Increment to replay the same selected clip.
+  prepared?: boolean;
+  closeUp?: boolean;
+  xray?: boolean;
+  finishToken?: number;
+  onReplay?: () => void;
   onAnimationFinished?: () => void;
   onViewerError?: (message: string) => void;
 }
 
+const XrayContext = createContext(false);
 const DEFAULT_CAMERA: Vec3 = [1.0, 0.9, 1.3];
 const DEFAULT_TARGET: Vec3 = [0, 0.1, -0.04];
 const PART_IDS = Object.keys(PART_LABELS) as PartId[];
@@ -55,18 +64,20 @@ function Highlight({ on }: { on: boolean }) {
 }
 
 function Tabletop({ highlighted }: { highlighted: boolean }) {
+  const xray = useContext(XrayContext);
   const materials = useMemo(() => {
-    const finish = new THREE.MeshStandardMaterial({ color: COLORS.finish, roughness: 0.55 });
+    const finish = new THREE.MeshStandardMaterial({ color: COLORS.finish, roughness: 0.38 });
     const raw = new THREE.MeshStandardMaterial({ color: COLORS.raw, roughness: 0.9 });
     // Box face order: +x, -x, +y (underside, where the holes are), -y (finished top), +z, -z
     return [finish, finish, raw, finish, finish, finish];
   }, []);
   useEffect(() => {
     for (const m of materials) {
+      m.transparent=xray; m.opacity=xray?.18:1; m.depthWrite=!xray;
       m.emissive.set(highlighted ? COLORS.highlight : "#000000");
       m.emissiveIntensity = highlighted ? 0.18 : 0;
     }
-  }, [highlighted, materials]);
+  }, [highlighted, materials, xray]);
   const inset = DIM.topSize / 2 - DIM.legSize / 2;
   return (
     <group>
@@ -90,13 +101,15 @@ function Tabletop({ highlighted }: { highlighted: boolean }) {
 }
 
 function Leg({ highlighted }: { highlighted: boolean }) {
+  const xray=useContext(XrayContext);
   return (
     <group>
       <mesh castShadow>
         <boxGeometry args={[DIM.legSize, DIM.legLength, DIM.legSize]} />
         <meshStandardMaterial
+          transparent={xray} opacity={xray?.18:1} depthWrite={!xray}
           color={COLORS.finish}
-          roughness={0.55}
+          roughness={0.38}
           emissive={highlighted ? COLORS.highlight : "#000000"}
           emissiveIntensity={highlighted ? 0.22 : 0}
         />
@@ -117,6 +130,14 @@ function Leg({ highlighted }: { highlighted: boolean }) {
 }
 
 function Fastener({ highlighted }: { highlighted: boolean }) {
+  const thread = useMemo(() => {
+    const points = Array.from({length:241},(_,i)=> {
+      const f=i/240, angle=f*Math.PI*2*15;
+      return new THREE.Vector3(Math.cos(angle)*DIM.fastenerRadius*1.04,(f-.5)*DIM.fastenerLength*.85,Math.sin(angle)*DIM.fastenerRadius*1.04);
+    });
+    return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),240,.00035,4,false);
+  }, []);
+  useEffect(()=>()=>thread.dispose(),[thread]);
   return (
     <group>
       <mesh castShadow>
@@ -130,6 +151,8 @@ function Fastener({ highlighted }: { highlighted: boolean }) {
         />
         <Highlight on={highlighted} />
       </mesh>
+      <mesh geometry={thread}><meshStandardMaterial color="#646d75" metalness={.8} roughness={.3}/></mesh>
+      {[-1,1].map(end=><mesh key={end} position={[0,end*DIM.fastenerLength/2,0]} rotation={[end===-1?Math.PI:0,0,0]}><coneGeometry args={[DIM.fastenerRadius,.006,12]}/><meshStandardMaterial color={COLORS.metal} metalness={.7} roughness={.3}/></mesh>)}
       <mesh>
         <cylinderGeometry args={[DIM.fastenerRadius * 1.25, DIM.fastenerRadius * 1.25, 0.008, 16]} />
         <meshStandardMaterial color="#6f767d" metalness={0.6} roughness={0.4} />
@@ -163,6 +186,7 @@ function SpinArrow({ radius }: { radius: number }) {
 // --- Scene -----------------------------------------------------------
 
 interface PlaybackApi {
+  speed: React.MutableRefObject<number>;
   t: React.MutableRefObject<number>;
   playing: React.MutableRefObject<boolean>;
   /** Requests a frame; the canvas only renders on demand to save battery. */
@@ -205,7 +229,7 @@ function AssemblyScene({ clip, highlighted, playback }: { clip: Clip; highlighte
     // must not jump the animation ahead. Slow devices otherwise keep real time.
     const delta = rawDelta > 0.25 ? 1 / 60 : rawDelta;
     if (pb.playing.current) {
-      pb.t.current = Math.min(1, pb.t.current + delta / clip.duration);
+      pb.t.current = Math.min(1, pb.t.current + delta * pb.speed.current / clip.duration);
       if (pb.t.current >= 1) {
         pb.playing.current = false;
         pb.onFinished();
@@ -284,10 +308,6 @@ function AssemblyScene({ clip, highlighted, playback }: { clip: Clip; highlighte
 
   return (
     <>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.0005, 0]} receiveShadow>
-        <planeGeometry args={[0.8, 0.8]} />
-        <meshStandardMaterial color={COLORS.blanket} roughness={1} />
-      </mesh>
       <group ref={assembly}>
         <group ref={inner}>
           <group ref={setPart("tabletop")}>
@@ -324,9 +344,11 @@ function AssemblyScene({ clip, highlighted, playback }: { clip: Clip; highlighte
 
 function CameraRig({
   focus,
+  closeUp,
   resetToken,
   controlsRef,
 }: {
+  closeUp?: boolean;
   focus: Vec3 | null;
   resetToken: number;
   controlsRef: React.MutableRefObject<OrbitControlsImpl | null>;
@@ -345,8 +367,9 @@ function CameraRig({
 
   useEffect(() => {
     goal.current = focus ? new THREE.Vector3(...focus) : null;
+    if(closeUp && focus) { camera.position.set(focus[0]+.32,focus[1]+.28,focus[2]+.38); controlsRef.current?.target.set(...focus); controlsRef.current?.update(); }
     invalidate();
-  }, [focus, invalidate]);
+  }, [focus, closeUp, camera, controlsRef, invalidate]);
 
   useEffect(() => {
     const controls = controlsRef.current;
@@ -408,19 +431,24 @@ class ViewerBoundary extends Component<{ onError: (m: string) => void; children:
 
 // --- Public component -------------------------------------------------
 
-export function AssemblyViewer({
+function LackAssemblyViewer({
   stepId,
   animationId,
   highlightedPartIds,
   replayToken,
   onAnimationFinished,
+  prepared=true, closeUp=false, xray=false, finishToken=0, onReplay,
   onViewerError,
 }: AssemblyViewerProps) {
+  const preferences = useBuilderPreferences();
+  const speed = useRef(preferences.speed);
+  speed.current = preferences.speed;
   const clip = CLIPS[animationId] as Clip | undefined;
+  const cameraFocus=useMemo<Vec3|null>(()=>{if(clip?.focus)return clip.focus;if(!closeUp)return null;const id=highlightedPartIds.find(p=>p.startsWith("fastener")||p.startsWith("leg"));if(!id)return null;const n=Number(id.split("-")[1]);return [[-.25,.055,.25],[.25,.055,.25],[.25,.055,-.25],[-.25,.055,-.25]][n-1] as Vec3;},[clip,closeUp,highlightedPartIds]);
   const reduced = useMemo(prefersReducedMotion, []);
   const webgl = useMemo(hasWebGL, []);
   const t = useRef(reduced ? 1 : 0);
-  const playing = useRef(!reduced);
+  const playing = useRef(!reduced && preferences.autoplay && prepared);
   const [shownT, setShownT] = useState(t.current);
   const [isPlaying, setIsPlaying] = useState(playing.current);
   const [resetToken, setResetToken] = useState(0);
@@ -435,11 +463,13 @@ export function AssemblyViewer({
   // Restart from the clip's own baseline on any clip change or replay request.
   useEffect(() => {
     t.current = reduced ? 1 : 0;
-    playing.current = !reduced;
+    playing.current = !reduced && preferences.autoplay && prepared;
     setShownT(t.current);
     setIsPlaying(playing.current);
     invalidate.current();
-  }, [animationId, stepId, replayToken, reduced]);
+  }, [animationId, stepId, replayToken, reduced, preferences.autoplay, prepared]);
+
+  useEffect(()=>{if(finishToken){t.current=1;playing.current=false;setShownT(1);setIsPlaying(false);invalidate.current();}},[finishToken]);
 
   useEffect(() => {
     if (!clip) errorRef.current?.(`Animation "${animationId}" is missing. Follow the written steps for now.`);
@@ -451,6 +481,7 @@ export function AssemblyViewer({
   const highlighted = useMemo(() => new Set(highlightedPartIds), [highlightedPartIds]);
   const playback: PlaybackApi = useMemo(
     () => ({
+      speed,
       t,
       playing,
       invalidate,
@@ -489,6 +520,14 @@ export function AssemblyViewer({
     invalidate.current();
   };
 
+  const zoom = (factor: number) => {
+    const c = controlsRef.current;
+    if (!c) return;
+    const offset=c.object.position.clone().sub(c.target);
+    const distance=THREE.MathUtils.clamp(offset.length()*factor,.45,3);
+    c.object.position.copy(c.target).add(offset.normalize().multiplyScalar(distance));
+    c.update();invalidate.current();
+  };
   const label = `3D view of this step. ${
     highlightedPartIds.length ? `Highlighted: ${highlightedPartIds.map((id) => PART_LABELS[id]).join(", ")}.` : ""
   } Drag to rotate, scroll or pinch to zoom.`;
@@ -506,15 +545,15 @@ export function AssemblyViewer({
       <div className="viewer-canvas" role="img" aria-label={label}>
         <ViewerBoundary onError={(m) => errorRef.current?.(m)}>
           <Canvas
+            shadows
             frameloop="demand"
             dpr={[1, 1.75]}
             camera={{ position: DEFAULT_CAMERA, fov: 38, near: 0.01, far: 20 }}
             gl={{ alpha: true, antialias: true, preserveDrawingBuffer: true }}
           >
-            <hemisphereLight args={["#ffffff", "#b9c2cc", 1.0]} />
-            <directionalLight position={[1.2, 2.2, 1.4]} intensity={1.6} />
+            <AssemblyRoom studio={preferences.scene === "focus"} />
             <Suspense fallback={null}>
-              <AssemblyScene clip={clip} highlighted={highlighted} playback={playback} />
+              <XrayContext.Provider value={xray}><AssemblyScene clip={clip} highlighted={highlighted} playback={playback} /></XrayContext.Provider>
               <ContactShadows position={[0, 0, 0]} opacity={0.35} scale={2.2} blur={2.4} far={0.8} resolution={256} />
             </Suspense>
             <OrbitControls
@@ -527,16 +566,16 @@ export function AssemblyViewer({
               maxPolarAngle={Math.PI / 2 - 0.04}
               target={DEFAULT_TARGET}
             />
-            <CameraRig focus={clip.focus} resetToken={resetToken} controlsRef={controlsRef} />
+            <CameraRig closeUp={closeUp} focus={cameraFocus} resetToken={resetToken} controlsRef={controlsRef} />
             <InvalidateBridge target={invalidate} />
           </Canvas>
         </ViewerBoundary>
       </div>
       <div className="viewer-controls">
-        <button type="button" className="vbtn" onClick={togglePlay} aria-pressed={isPlaying}>
+        <button type="button" className="vbtn" disabled={!prepared} onClick={togglePlay} aria-pressed={isPlaying}>
           {isPlaying ? "Pause" : "Play"}
         </button>
-        <button type="button" className="vbtn" onClick={replay}>
+        <button type="button" className="vbtn" disabled={!prepared} onClick={()=>{onReplay?.();replay();}}>
           Replay
         </button>
         <label className="scrub" htmlFor="viewer-scrub">
@@ -551,11 +590,15 @@ export function AssemblyViewer({
             onChange={(e) => scrub(Number(e.target.value))}
           />
         </label>
+        <button type="button" className="vbtn viewer-zoom" aria-label="Zoom in" onClick={() => zoom(.8)}>＋</button>
+        <button type="button" className="vbtn viewer-zoom" aria-label="Zoom out" onClick={() => zoom(1.25)}>−</button>
         <button type="button" className="vbtn" onClick={() => setResetToken((n) => n + 1)}>
           Reset view
         </button>
       </div>
-      <p className="viewer-hint">Drag to rotate · scroll or pinch to zoom</p>
+      <p className="viewer-hint">Drag to rotate · scroll or pinch to zoom · {preferences.speed}× pace</p>
     </div>
   );
 }
+
+export function AssemblyViewer(props:AssemblyViewerProps){return props.guideId.startsWith("smastad-")?<SmastadViewer {...props}/>:<LackAssemblyViewer {...props}/>;}
