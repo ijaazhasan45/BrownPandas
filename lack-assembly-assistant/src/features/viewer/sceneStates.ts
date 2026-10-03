@@ -61,8 +61,9 @@ export const DIM = {
   topThickness: 0.05,
   legSize: 0.05,
   legLength: 0.4,
-  fastenerRadius: 0.0045,
-  fastenerLength: 0.07,
+  // Matches the estimated 115980 size in the catalog (6 x 60 mm); not measured.
+  fastenerRadius: 0.003,
+  fastenerLength: 0.06,
 } as const;
 
 const TOP_Y = DIM.topThickness; // underside surface height while upside down

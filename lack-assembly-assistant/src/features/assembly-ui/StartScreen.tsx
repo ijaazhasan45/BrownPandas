@@ -101,7 +101,7 @@ export function StartScreen({ onGuide }: { onGuide: (guide: AssemblyGuide, sourc
         <p className="fine">
           How recognition works: the app checks that your PDF is the exact supported file, then opens a guide our team
           prepared from its diagrams. It doesn't generate 3D models from arbitrary manuals.
-          {SERVICE_MODE === "static" ? " This preview runs without a server, so help uses prepared content only." : ""}
+          {SERVICE_MODE === "static" ? " This version works offline, so help uses prepared content only." : ""}
         </p>
       </section>
     </main>

@@ -15,6 +15,9 @@ export function validateGuide(guide: AssemblyGuide, hasAnimation: (id: string) =
     for (const part of step.highlightedPartIds) {
       if (!partIds.has(part)) problems.push(`Step ${step.id} highlights unknown part ${part}.`);
     }
+    for (const part of step.partsUsed ?? []) {
+      if (!partIds.has(part)) problems.push(`Step ${step.id} uses unknown part ${part}.`);
+    }
     for (const sub of step.substeps) {
       if (substepIds.has(sub.id)) problems.push(`Duplicate substep id ${sub.id}.`);
       substepIds.add(sub.id);
@@ -27,5 +30,31 @@ export function validateGuide(guide: AssemblyGuide, hasAnimation: (id: string) =
       }
     }
   });
+
+  const claimed = new Set<string>();
+  for (const hw of guide.hardware ?? []) {
+    for (const part of hw.partIds) {
+      if (!partIds.has(part)) problems.push(`Hardware ${hw.code} maps to unknown part ${part}.`);
+      if (claimed.has(part)) problems.push(`Part ${part} belongs to more than one hardware entry.`);
+      claimed.add(part);
+    }
+    if (hw.partIds.length && hw.partIds.length !== hw.quantity) {
+      problems.push(`Hardware ${hw.code} lists ${hw.quantity} pieces but maps to ${hw.partIds.length} parts.`);
+    }
+    const missing = missingDimensions(hw.shape, hw.sizeMm);
+    if (missing.length) problems.push(`Hardware ${hw.code} (${hw.shape}) needs ${missing.join(", ")}.`);
+  }
   return problems;
+}
+
+const REQUIRED: Record<NonNullable<AssemblyGuide["hardware"]>[number]["shape"], string[]> = {
+  "double-ended-screw": ["length", "diameter"],
+  screw: ["length", "diameter", "headDiameter"],
+  dowel: ["length", "diameter"],
+  washer: ["diameter", "innerDiameter", "thickness"],
+  nut: ["diameter", "innerDiameter", "thickness"],
+};
+
+export function missingDimensions(shape: keyof typeof REQUIRED, size: Record<string, number | undefined>): string[] {
+  return REQUIRED[shape].filter((key) => !(typeof size[key] === "number" && (size[key] as number) > 0));
 }

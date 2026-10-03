@@ -1,6 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { AssemblyGuide, BuildSession, HelpChoice, HelpRequest, SkillId, UserProfile } from "../../shared/contracts";
-import { AssemblyViewer } from "../viewer/AssemblyViewer";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { AssemblyGuide, BuildSession, HardwareSpec, HelpChoice, HelpRequest, SkillId, UserProfile } from "../../shared/contracts";
+import { PartsCallout, hardwareForParts } from "./PartsCallout";
+import { tapFeedback, useSpeech, useWakeLock } from "./deviceHooks";
+
+// three.js is the heaviest part of the app; load it only when the build screen opens.
+export const loadViewer = () => import("../viewer/AssemblyViewer");
+const AssemblyViewer = lazy(() => loadViewer().then((m) => ({ default: m.AssemblyViewer })));
+const ActualSizeSheet = lazy(() => import("../scale/ActualSizeSheet").then((m) => ({ default: m.ActualSizeSheet })));
 import { SERVICE_MODE, getHelp, getPreparedHelp } from "../instructions/instructionService";
 import { accessibleStepIds, firstIncompleteIndex, getAdaptation, isBuildComplete, profileStore } from "../profile/profileStore";
 import { HelpPanel, SubstepList, type HelpState } from "./HelpPanel";
@@ -45,6 +51,9 @@ export function AssemblyScreen({
   const [replayToken] = useState(0);
   const [viewerError, setViewerError] = useState<string | null>(null);
   const [stepsOpen, setStepsOpen] = useState(false);
+  const [actualSize, setActualSize] = useState<HardwareSpec[] | null>(null);
+  const speech = useSpeech();
+  useWakeLock(true);
   const active = useRef<{ requestId: string; stepId: string; controller: AbortController | null } | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const firstRender = useRef(true);
@@ -57,6 +66,7 @@ export function AssemblyScreen({
     setHelpOpen(false);
     setActiveSubstepId(null);
     setDetailsOpen(getAdaptation(step, profileStore.loadProfile()).expanded);
+    speech.stop();
     if (!firstRender.current) headingRef.current?.focus();
     firstRender.current = false;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -81,6 +91,7 @@ export function AssemblyScreen({
   );
 
   function complete() {
+    tapFeedback();
     if (!isDone) {
       const updated = profileStore.completeStep(session.id, step.id);
       if (isBuildComplete(guide, updated)) {
@@ -173,14 +184,16 @@ export function AssemblyScreen({
   return (
     <main className="bench" id="main">
       <section className="stage" aria-label="3D view">
-        <AssemblyViewer
-          guideId={guide.id}
-          stepId={step.id}
-          animationId={animationId}
-          highlightedPartIds={highlights}
-          replayToken={replayToken}
-          onViewerError={setViewerError}
-        />
+        <Suspense fallback={<div className="viewer viewer--empty" role="status"><p>Loading the 3D view…</p></div>}>
+          <AssemblyViewer
+            guideId={guide.id}
+            stepId={step.id}
+            animationId={animationId}
+            highlightedPartIds={highlights}
+            replayToken={replayToken}
+            onViewerError={setViewerError}
+          />
+        </Suspense>
         {viewerError ? (
           <p className="viewer-error" role="alert">
             {viewerError}
@@ -210,7 +223,23 @@ export function AssemblyScreen({
           </h2>
         </div>
 
+        <PartsCallout guide={guide} step={step} onActualSize={setActualSize} />
+
         <p className="instruction">{step.instruction}</p>
+        {speech.supported ? (
+          <button
+            type="button"
+            className="link-btn read-aloud"
+            aria-pressed={speech.speaking}
+            onClick={() =>
+              speech.speaking
+                ? speech.stop()
+                : speech.speak(`${step.title}. ${step.instruction} Before you continue: ${step.completionCheck}`)
+            }
+          >
+            {speech.speaking ? "Stop reading" : "Read this step aloud"}
+          </button>
+        ) : null}
 
         {adaptation.expanded && !helpOpen ? (
           <div className="adapt">
@@ -265,6 +294,11 @@ export function AssemblyScreen({
             onChoose={(c) => ask(c)}
             onSend={(text) => ask(undefined, text)}
             onConfirm={confirm}
+            onActualSize={
+              hardwareForParts(guide, step.partsUsed ?? []).length
+                ? () => setActualSize(hardwareForParts(guide, step.partsUsed ?? []))
+                : undefined
+            }
             onClose={() => {
               setHelpOpen(false);
               setActiveSubstepId(null);
@@ -319,6 +353,11 @@ export function AssemblyScreen({
           ) : null}
         </div>
       </section>
+      {actualSize ? (
+        <Suspense fallback={null}>
+          <ActualSizeSheet hardware={actualSize} onClose={() => setActualSize(null)} />
+        </Suspense>
+      ) : null}
     </main>
   );
 }

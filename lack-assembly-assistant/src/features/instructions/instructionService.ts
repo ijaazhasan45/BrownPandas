@@ -10,7 +10,11 @@ import { buildPreparedHelp } from "../../shared/preparedHelp";
 import { parseGuide, parseHelpResponse } from "../../shared/schemas";
 import { GUIDES, MANUAL_REGISTRY, SAMPLE_GUIDE_ID } from "../../data/catalog";
 
-export const SERVICE_MODE: "server" | "static" = __STATIC_DEMO__ ? "static" : "server";
+/** Server origin for app builds (e.g. https://assist.example.com). Empty means same origin. */
+const API_BASE = String(import.meta.env.VITE_API_BASE ?? "").replace(/\/$/, "");
+/** Offline builds (static preview, mobile app) recognize the PDF on the device. */
+const LOCAL_RECOGNITION = __STATIC_DEMO__;
+export const SERVICE_MODE: "server" | "static" = __STATIC_DEMO__ && !API_BASE ? "static" : "server";
 
 export class ServiceError extends Error {
   constructor(public readonly error: ApiError) {
@@ -37,7 +41,7 @@ export async function loadManual(file: File, signal?: AbortSignal): Promise<Asse
   if (file.size > 10 * 1024 * 1024) {
     throw new ServiceError({ code: "INVALID_PDF", message: "That file is larger than 10 MB. The LACK instructions are much smaller." });
   }
-  if (SERVICE_MODE === "static") {
+  if (LOCAL_RECOGNITION) {
     const bytes = new Uint8Array(await file.arrayBuffer());
     const result = recognize(bytes, await sha256Hex(bytes), MANUAL_REGISTRY, GUIDES);
     if (!result.ok) throw new ServiceError({ code: result.code, message: result.message });
@@ -47,7 +51,7 @@ export async function loadManual(file: File, signal?: AbortSignal): Promise<Asse
   body.append("file", file);
   let res: Response;
   try {
-    res = await fetch("/api/manuals/recognize", { method: "POST", body, signal });
+    res = await fetch(`${API_BASE}/api/manuals/recognize`, { method: "POST", body, signal });
   } catch (e) {
     if ((e as Error).name === "AbortError") throw e;
     throw new ServiceError({ code: "PROCESSING_FAILED", message: "Couldn't reach the app server. Check that it's running, or use the sample guide." });
@@ -76,7 +80,7 @@ export function getPreparedHelp(request: HelpRequest): HelpResponse {
 export async function getHelp(request: HelpRequest, signal?: AbortSignal): Promise<HelpResponse> {
   if (SERVICE_MODE === "static") return getPreparedHelp(request);
   try {
-    const res = await fetch("/api/help", {
+    const res = await fetch(`${API_BASE}/api/help`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(request),

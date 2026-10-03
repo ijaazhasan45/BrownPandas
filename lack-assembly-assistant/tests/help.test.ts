@@ -90,6 +90,16 @@ describe("server", () => {
     expect(res.body.help.difficulty.status).toBe("confirmed");
   });
 
+  it("lets the mobile app shell call the API and nobody else", async () => {
+    const app = createApp({ guides, registry: {}, refiner: null });
+    const ok = await request(app).options("/api/help").set("Origin", "capacitor://localhost");
+    expect(ok.status).toBe(204);
+    expect(ok.headers["access-control-allow-origin"]).toBe("capacitor://localhost");
+    const other = await request(app).options("/api/help").set("Origin", "https://evil.example");
+    expect(other.status).toBe(403);
+    expect(other.headers["access-control-allow-origin"]).toBeUndefined();
+  });
+
   it("rejects unknown steps and malformed bodies", async () => {
     const app = createApp({ guides, registry: {}, refiner: null });
     expect((await request(app).post("/api/help").send({ ...base, stepId: "drawer-1" })).body.error.code).toBe("INVALID_HELP_REQUEST");

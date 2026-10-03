@@ -9,10 +9,12 @@ import type {
   UserProfile,
 } from "../../shared/contracts";
 import { isSkillId } from "../../shared/skills";
+import { calibrationMatches, isCalibration, makeCalibration, type ScaleCalibration, type ScreenInfo } from "../scale/scaleMath";
 export { getAdaptation } from "./adaptation";
 
 export const PROFILE_KEY = "assembly-assistant:profile:v1";
 export const SESSION_KEY = "assembly-assistant:session:v1";
+export const SCALE_KEY = "assembly-assistant:scale:v1";
 const MAX_EVENT_IDS = 300;
 
 export interface StorageLike {
@@ -62,6 +64,7 @@ export class ProfileStore {
   private profileEnv: ProfileEnvelope | null = null;
   private session: BuildSession | null = null;
   private guide: AssemblyGuide | null = null;
+  private memoryCalibration: ScaleCalibration | null = null;
   /** False when the browser refuses storage; the app still works for this visit. */
   persistenceAvailable: boolean;
 
@@ -161,6 +164,32 @@ export class ProfileStore {
     env.processedEventIds = [];
     this.write(PROFILE_KEY, env);
     return this.loadProfile();
+  }
+
+  // --- Device: actual-size calibration -------------------------------
+
+  /** The saved calibration if it was made on this screen at this zoom; otherwise null. */
+  loadScaleCalibration(screen: ScreenInfo): ScaleCalibration | null {
+    const stored = this.memoryCalibration ?? this.read<ScaleCalibration>(SCALE_KEY);
+    if (!isCalibration(stored)) return null;
+    return calibrationMatches(stored, screen) ? { ...stored } : null;
+  }
+
+  saveScaleCalibration(pxPerMm: number, screen: ScreenInfo): ScaleCalibration {
+    const cal = makeCalibration(pxPerMm, screen, this.now());
+    this.memoryCalibration = cal;
+    this.write(SCALE_KEY, cal);
+    return { ...cal };
+  }
+
+  clearScaleCalibration(): void {
+    this.memoryCalibration = null;
+    if (!this.persistenceAvailable) return;
+    try {
+      this.storage!.removeItem(SCALE_KEY);
+    } catch {
+      /* ignore */
+    }
   }
 
   // --- Sessions ------------------------------------------------------

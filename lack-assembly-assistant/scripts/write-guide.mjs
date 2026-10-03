@@ -11,6 +11,7 @@ const ordinal = { 1: "first", 2: "second", 3: "third", 4: "fourth" };
 const steps = [];
 steps.push({
   id: "prepare",
+  partsUsed: ["tabletop", "leg-1", "leg-2", "leg-3", "leg-4", "fastener-1", "fastener-2", "fastener-3", "fastener-4"],
   title: "Lay out the parts",
   instruction:
     "Spread a blanket or the flattened box on the floor. Lay the tabletop on it with the finished top facing down, so the side with a hole near each corner faces up. Set the four legs and four fasteners beside it.",
@@ -50,6 +51,7 @@ for (const n of [1, 2, 3, 4]) {
   const c = corner[n];
   steps.push({
     id: `fastener-${n}`,
+    partsUsed: [`fastener-${n}`],
     title: `Start the ${ordinal[n]} fastener`,
     instruction: `Set one end of a fastener into the ${c} corner hole and turn it clockwise by hand until it holds firmly and stands straight up. The other threaded end stays exposed for the leg.`,
     completionCheck: `The fastener stands straight up in the ${c} hole, doesn't wobble, and its other end sticks out.`,
@@ -84,6 +86,7 @@ for (const n of [1, 2, 3, 4]) {
   });
   steps.push({
     id: `leg-${n}`,
+    partsUsed: [`leg-${n}`],
     title: `Attach the ${ordinal[n]} leg`,
     instruction: `Hold a leg straight up with its hole facing down over the fastener in the ${c} corner. Turn the leg clockwise by hand until it sits flat against the tabletop.`,
     completionCheck: `The leg sits flat against the tabletop with no gap and doesn't wobble when you push it gently.`,
@@ -120,6 +123,7 @@ for (const n of [1, 2, 3, 4]) {
 
 steps.push({
   id: "upright",
+  partsUsed: [],
   title: "Turn the table over",
   instruction:
     "Lift the table by the tabletop, with a second person if you can, and turn it over so it stands on its legs. Set it down gently on all four legs at once.",
@@ -148,6 +152,7 @@ steps.push({
 
 steps.push({
   id: "final-check",
+  partsUsed: [],
   title: "Check the table",
   instruction:
     "Look at each leg from the side; each should sit flat against the tabletop. If one is loose, turn the table back over and tighten that leg by hand.",
@@ -182,6 +187,19 @@ const guide = {
     ...[1, 2, 3, 4].map((n) => ({ id: `fastener-${n}`, label: `Fastener ${n} (part 115980)` })),
   ],
   steps: steps.map((s, i) => ({ id: s.id, order: i, ...s })),
+  hardware: [
+    {
+      code: "115980",
+      name: "Double-ended screw",
+      shape: "double-ended-screw",
+      quantity: 4,
+      partIds: ["fastener-1", "fastener-2", "fastener-3", "fastener-4"],
+      // Estimated, not measured. Measure a real 115980 and set sizeVerified: true.
+      sizeMm: { length: 60, diameter: 6 },
+      sizeVerified: false,
+      sizeNote: "Estimated size. Our team hasn't measured a real 115980 yet.",
+    },
+  ],
   usageNotes: [
     "Don't sit on the table.",
     "Keep the load on the tabletop to 22 lb (10 kg) or less.",

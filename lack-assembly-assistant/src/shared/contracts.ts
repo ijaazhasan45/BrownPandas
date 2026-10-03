@@ -31,6 +31,8 @@ export interface InstructionSubstep {
 
 export interface AssemblyStep {
   id: string;
+  /** v1.1 (optional): parts this step uses, for the parts callout. */
+  partsUsed?: PartId[];
   order: number; // Zero-based, consecutive.
   title: string;
   instruction: string;
@@ -54,6 +56,29 @@ export interface AssemblyGuide {
   parts: { id: PartId; label: string }[];
   steps: AssemblyStep[];
   usageNotes: string[];
+  /** v1.1 (optional): small parts that can be shown at actual size. */
+  hardware?: HardwareSpec[];
+}
+
+/** v1.1: shapes the actual-size drawing knows how to draw. */
+export type HardwareShape = "double-ended-screw" | "screw" | "dowel" | "washer" | "nut";
+
+export interface HardwareSpec {
+  code: string; // manufacturer part number, e.g. "115980"
+  name: string;
+  shape: HardwareShape;
+  quantity: number;
+  partIds: PartId[]; // 3D parts this hardware corresponds to
+  sizeMm: {
+    length?: number;
+    diameter?: number;
+    innerDiameter?: number;
+    headDiameter?: number;
+    thickness?: number;
+  };
+  /** False until someone measures a real part. The UI says so. */
+  sizeVerified: boolean;
+  sizeNote?: string;
 }
 
 export interface LearningNeed {

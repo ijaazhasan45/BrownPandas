@@ -12,7 +12,11 @@ export interface AppDeps {
   registry: ManualRegistry;
   refiner: HelpRefiner | null;
   aiTimeoutMs?: number;
+  /** Extra origins allowed to call the API, e.g. the Capacitor app shell. */
+  corsOrigins?: string[];
 }
+
+const DEFAULT_APP_ORIGINS = ["capacitor://localhost", "http://localhost", "https://localhost"];
 
 function sendError(res: Response, status: number, error: ApiError) {
   res.status(status).json({ error });
@@ -21,6 +25,18 @@ function sendError(res: Response, status: number, error: ApiError) {
 export function createApp(deps: AppDeps) {
   const app = express();
   app.disable("x-powered-by");
+  const allowed = new Set([...DEFAULT_APP_ORIGINS, ...(deps.corsOrigins ?? [])]);
+  app.use("/api", (req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin && allowed.has(origin)) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Vary", "Origin");
+      res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    }
+    if (req.method === "OPTIONS") return res.sendStatus(origin && allowed.has(origin) ? 204 : 403);
+    next();
+  });
   app.use("/api", express.json({ limit: "16kb" }));
 
   const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX_UPLOAD_BYTES, files: 1 } });

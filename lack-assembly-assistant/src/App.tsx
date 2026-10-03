@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { AssemblyGuide, BuildSession, UserProfile } from "./shared/contracts";
 import { StartScreen } from "./features/assembly-ui/StartScreen";
-import { AssemblyScreen } from "./features/assembly-ui/AssemblyScreen";
+import { AssemblyScreen, loadViewer } from "./features/assembly-ui/AssemblyScreen";
 import { CompleteScreen } from "./features/assembly-ui/CompleteScreen";
 import { MemoryPanel } from "./features/assembly-ui/MemoryPanel";
 import { isBuildComplete, profileStore } from "./features/profile/profileStore";
@@ -44,6 +44,14 @@ export default function App() {
     setMemoryOpen(false);
     announce("New build started at step 1. What you found tricky is still remembered.");
   }, [guide, announce]);
+
+  // Fetch the 3D code in the background so opening a guide feels instant.
+  useEffect(() => {
+    const idle = (window as Window & { requestIdleCallback?: (cb: () => void) => number }).requestIdleCallback;
+    const start = () => void loadViewer().catch(() => undefined);
+    if (idle) idle(start);
+    else setTimeout(start, 1500);
+  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);

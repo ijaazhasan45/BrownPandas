@@ -32,9 +32,12 @@ const UPRIGHT_ORIENTATION =
 const GENERIC =
   "Here is this step in smaller pieces. Select a piece to watch only that part of the animation.";
 
-export function explanationFor(step: AssemblyStep, skill: SkillId | null): string {
+export function explanationFor(step: AssemblyStep, skill: SkillId | null, hasHardware = false): string {
   if (!skill) return GENERIC;
   if (skill === "part_orientation" && step.id === "upright") return UPRIGHT_ORIENTATION;
+  if (skill === "part_identification" && hasHardware) {
+    return `${EXPLANATIONS[skill]} To check a small part, use Compare a part at actual size and lay it on the outline.`;
+  }
   return EXPLANATIONS[skill];
 }
 
@@ -95,7 +98,7 @@ export function buildPreparedHelp(guide: AssemblyGuide, request: HelpRequest): H
     requestId: request.requestId,
     guideId: guide.id,
     stepId: step.id,
-    explanation: explanationFor(step, skill),
+    explanation: explanationFor(step, skill, !!guide.hardware?.length),
     substeps: substepsFor(step, skill),
     difficulty: { skillId: skill, status },
     origin: "prepared_fallback",

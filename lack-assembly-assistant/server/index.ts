@@ -21,6 +21,7 @@ const app = createApp({
   guides: loadGuides(),
   registry,
   refiner: apiKey ? createAnthropicRefiner(apiKey, model) : null,
+  corsOrigins: (process.env.CORS_ORIGINS ?? "").split(",").map((s) => s.trim()).filter(Boolean),
 });
 
 if (process.env.NODE_ENV === "production") {

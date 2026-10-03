@@ -21,6 +21,7 @@ export const substepSchema = z.object({
 
 export const stepSchema = z.object({
   id: z.string().min(1),
+  partsUsed: z.array(partId).optional(),
   order: z.number().int().min(0),
   title: z.string().min(1),
   instruction: z.string().min(1),
@@ -44,6 +45,26 @@ export const guideSchema = z.object({
   parts: z.array(z.object({ id: partId, label: z.string().min(1) })),
   steps: z.array(stepSchema).min(1),
   usageNotes: z.array(z.string()),
+  hardware: z
+    .array(
+      z.object({
+        code: z.string().min(1),
+        name: z.string().min(1),
+        shape: z.enum(["double-ended-screw", "screw", "dowel", "washer", "nut"]),
+        quantity: z.number().int().min(1),
+        partIds: z.array(partId),
+        sizeMm: z.object({
+          length: z.number().positive().max(400).optional(),
+          diameter: z.number().positive().max(200).optional(),
+          innerDiameter: z.number().positive().max(200).optional(),
+          headDiameter: z.number().positive().max(200).optional(),
+          thickness: z.number().positive().max(100).optional(),
+        }),
+        sizeVerified: z.boolean(),
+        sizeNote: z.string().optional(),
+      }),
+    )
+    .optional(),
 });
 
 export const helpRequestSchema = z.object({

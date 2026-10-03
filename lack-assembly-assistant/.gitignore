@@ -3,3 +3,6 @@ dist
 dist-static
 .env
 *.log
+dist-app
+ios
+android

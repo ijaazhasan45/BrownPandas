@@ -165,6 +165,8 @@ function SpinArrow({ radius }: { radius: number }) {
 interface PlaybackApi {
   t: React.MutableRefObject<number>;
   playing: React.MutableRefObject<boolean>;
+  /** Requests a frame; the canvas only renders on demand to save battery. */
+  invalidate: React.MutableRefObject<() => void>;
   onTick: (t: number) => void;
   onFinished: () => void;
 }
@@ -197,8 +199,11 @@ function AssemblyScene({ clip, highlighted, playback }: { clip: Clip; highlighte
   const tmpB = useMemo(() => new THREE.Vector3(), []);
   const spinClock = useRef(0);
 
-  useFrame((_, delta) => {
+  useFrame((state, rawDelta) => {
     const pb = playback;
+    // On-demand rendering leaves gaps between frames; the first frame after a pause
+    // must not jump the animation ahead. Slow devices otherwise keep real time.
+    const delta = rawDelta > 0.25 ? 1 / 60 : rawDelta;
     if (pb.playing.current) {
       pb.t.current = Math.min(1, pb.t.current + delta / clip.duration);
       if (pb.t.current >= 1) {
@@ -267,6 +272,7 @@ function AssemblyScene({ clip, highlighted, playback }: { clip: Clip; highlighte
       guideLine.geometry.setFromPoints([tmpA.clone(), tmpB.clone()]);
       guideLine.computeLineDistances();
     }
+    if (pb.playing.current) state.invalidate();
   });
 
   const setPart = (id: PartId) => (el: THREE.Group | null) => {
@@ -325,7 +331,7 @@ function CameraRig({
   resetToken: number;
   controlsRef: React.MutableRefObject<OrbitControlsImpl | null>;
 }) {
-  const { camera } = useThree();
+  const { camera, invalidate } = useThree();
   const goal = useRef<THREE.Vector3 | null>(null);
   const userActive = useRef(false);
 
@@ -334,11 +340,13 @@ function CameraRig({
     controlsRef.current?.target.set(...DEFAULT_TARGET);
     controlsRef.current?.update();
     goal.current = null;
-  }, [resetToken, camera, controlsRef]);
+    invalidate();
+  }, [resetToken, camera, controlsRef, invalidate]);
 
   useEffect(() => {
     goal.current = focus ? new THREE.Vector3(...focus) : null;
-  }, [focus]);
+    invalidate();
+  }, [focus, invalidate]);
 
   useEffect(() => {
     const controls = controlsRef.current;
@@ -358,13 +366,24 @@ function CameraRig({
     };
   }, [controlsRef]);
 
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     const controls = controlsRef.current;
     if (!controls || !goal.current || userActive.current) return;
-    controls.target.lerp(goal.current, Math.min(1, delta * 4));
+    controls.target.lerp(goal.current, Math.min(1, Math.min(delta, 1 / 20) * 4));
     controls.update();
     if (controls.target.distanceTo(goal.current) < 0.002) goal.current = null;
+    else state.invalidate();
   });
+  return null;
+}
+
+/** Exposes the canvas's invalidate() to controls outside the canvas. */
+function InvalidateBridge({ target }: { target: React.MutableRefObject<() => void> }) {
+  const invalidate = useThree((s) => s.invalidate);
+  useEffect(() => {
+    target.current = () => invalidate();
+    invalidate();
+  }, [invalidate, target]);
   return null;
 }
 
@@ -406,6 +425,7 @@ export function AssemblyViewer({
   const [isPlaying, setIsPlaying] = useState(playing.current);
   const [resetToken, setResetToken] = useState(0);
   const lastTick = useRef(0);
+  const invalidate = useRef<() => void>(() => undefined);
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const finishedRef = useRef(onAnimationFinished);
   finishedRef.current = onAnimationFinished;
@@ -418,6 +438,7 @@ export function AssemblyViewer({
     playing.current = !reduced;
     setShownT(t.current);
     setIsPlaying(playing.current);
+    invalidate.current();
   }, [animationId, stepId, replayToken, reduced]);
 
   useEffect(() => {
@@ -432,6 +453,7 @@ export function AssemblyViewer({
     () => ({
       t,
       playing,
+      invalidate,
       onTick: (value: number) => {
         const now = performance.now();
         if (now - lastTick.current > 90 || value >= 1) {
@@ -451,17 +473,20 @@ export function AssemblyViewer({
     if (!playing.current && t.current >= 1) t.current = 0;
     playing.current = !playing.current;
     setIsPlaying(playing.current);
+    invalidate.current();
   };
   const replay = () => {
     t.current = 0;
     playing.current = true;
     setIsPlaying(true);
+    invalidate.current();
   };
   const scrub = (value: number) => {
     t.current = value;
     playing.current = false;
     setIsPlaying(false);
     setShownT(value);
+    invalidate.current();
   };
 
   const label = `3D view of this step. ${
@@ -481,16 +506,16 @@ export function AssemblyViewer({
       <div className="viewer-canvas" role="img" aria-label={label}>
         <ViewerBoundary onError={(m) => errorRef.current?.(m)}>
           <Canvas
-            shadows
-            dpr={[1, 2]}
+            frameloop="demand"
+            dpr={[1, 1.75]}
             camera={{ position: DEFAULT_CAMERA, fov: 38, near: 0.01, far: 20 }}
             gl={{ alpha: true, antialias: true, preserveDrawingBuffer: true }}
           >
             <hemisphereLight args={["#ffffff", "#b9c2cc", 1.0]} />
-            <directionalLight position={[1.2, 2.2, 1.4]} intensity={1.6} castShadow shadow-mapSize={[1024, 1024]} />
+            <directionalLight position={[1.2, 2.2, 1.4]} intensity={1.6} />
             <Suspense fallback={null}>
               <AssemblyScene clip={clip} highlighted={highlighted} playback={playback} />
-              <ContactShadows position={[0, 0, 0]} opacity={0.35} scale={2.2} blur={2.4} far={0.8} />
+              <ContactShadows position={[0, 0, 0]} opacity={0.35} scale={2.2} blur={2.4} far={0.8} resolution={256} />
             </Suspense>
             <OrbitControls
               ref={controlsRef}
@@ -503,6 +528,7 @@ export function AssemblyViewer({
               target={DEFAULT_TARGET}
             />
             <CameraRig focus={clip.focus} resetToken={resetToken} controlsRef={controlsRef} />
+            <InvalidateBridge target={invalidate} />
           </Canvas>
         </ViewerBoundary>
       </div>

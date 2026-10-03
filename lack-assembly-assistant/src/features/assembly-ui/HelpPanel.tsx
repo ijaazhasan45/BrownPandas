@@ -60,6 +60,7 @@ export function HelpPanel({
   onSend,
   onConfirm,
   onClose,
+  onActualSize,
 }: {
   step: AssemblyStep;
   help: HelpState;
@@ -69,6 +70,7 @@ export function HelpPanel({
   onSend: (text: string) => void;
   onConfirm: (yes: boolean) => void;
   onClose: () => void;
+  onActualSize?: () => void;
 }) {
   const [text, setText] = useState("");
   const choices: HelpChoice[] = [...step.skills, "other"];
@@ -109,6 +111,12 @@ export function HelpPanel({
         <p className="saved" role="status">
           Noted: {SKILL_LABELS[help.recordedSkill].toLowerCase()}. Later steps that involve it will open with extra detail.
         </p>
+      ) : null}
+
+      {onActualSize && (r.difficulty.skillId === "part_identification" || step.skills.includes("fastener_alignment")) ? (
+        <button type="button" className="btn btn-small" onClick={onActualSize}>
+          Compare a part at actual size
+        </button>
       ) : null}
 
       <fieldset className="choices">

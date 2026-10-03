@@ -18,6 +18,9 @@
   --help-line: #e3a53c;
   --danger: #a3271b;
   --focus: #1d63c9;
+  --hw-fill: #c9ced3;
+  --hw-plain: #dde1e4;
+  --hw-wood: #e7cfa3;
 
   --display: "Archivo", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
   --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
@@ -44,6 +47,9 @@
     --help-line: #b5822d;
     --danger: #ff8a7d;
     --focus: #8bb8ff;
+    --hw-fill: #59636c;
+    --hw-plain: #6c7680;
+    --hw-wood: #8a6f45;
     color-scheme: dark;
   }
 }
@@ -64,6 +70,9 @@
   --help-line: #b5822d;
   --danger: #ff8a7d;
   --focus: #8bb8ff;
+  --hw-fill: #59636c;
+  --hw-plain: #6c7680;
+  --hw-wood: #8a6f45;
   color-scheme: dark;
 }
 
@@ -409,4 +418,88 @@ a { color: var(--accent); }
 }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
+}
+
+/* Parts callout (LEGO-style box of what this step uses) */
+.callout {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px;
+  padding: 10px 12px; border: 1.5px solid var(--line); border-radius: var(--r); background: var(--paper);
+}
+.callout-items { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.callout-item { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.callout-icon { width: 44px; height: 44px; display: grid; place-items: center; flex: none; }
+.callout-count { font-size: 1rem; font-weight: 700; }
+.callout-label { display: flex; flex-direction: column; font-size: 0.88rem; line-height: 1.25; }
+.callout-code { color: var(--muted); }
+.callout-btn { gap: 6px; }
+.part-icon path { fill: var(--sheet); stroke: var(--ink); stroke-width: 1.5; stroke-linejoin: round; }
+.part-icon .part-icon-side { fill: var(--line); }
+
+/* Hardware drawings (authored in mm; stroke width set inline in mm) */
+.hw-drawing { display: block; overflow: visible; }
+.hw-drawing .hw-body { fill: var(--hw-fill); stroke: var(--ink); stroke-linejoin: round; }
+.hw-drawing .hw-wood { fill: var(--hw-wood); }
+.hw-drawing .hw-plain { fill: var(--hw-plain); stroke: none; }
+.hw-drawing .hw-thread line { stroke: var(--ink); stroke-opacity: 0.55; }
+.hw-drawing .hw-hole { fill: var(--sheet); stroke: var(--ink); }
+.ruler { display: block; overflow: visible; }
+.ruler line { stroke: var(--ink); stroke-width: 1; shape-rendering: crispEdges; }
+.ruler text { fill: var(--ink); font: 600 11px var(--mono); }
+
+.read-aloud { align-self: flex-start; }
+
+/* Actual-size sheet */
+.actual {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; flex-direction: column;
+  background: var(--sheet);
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.actual-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 16px; border-bottom: 1px solid var(--line);
+}
+.actual-head h2 { font-size: 1.3rem; }
+.actual-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 18px; }
+.lede-sm { margin: 0; font-size: 1rem; }
+.actual-item { display: flex; flex-direction: column; gap: 10px; }
+.actual-item h3 { font-size: 1.1rem; }
+.actual-item header { display: flex; flex-direction: column; gap: 2px; }
+.actual-drawing {
+  padding: 14px 0; border-block: 1px dashed var(--line);
+  overflow-x: auto;
+}
+.actual-drawing.is-vertical { display: flex; justify-content: flex-start; padding-left: 12px; }
+.actual-warn { margin: 0; padding: 10px 12px; border-radius: var(--r); background: var(--help); color: var(--help-ink); }
+.actual-warn .link-btn { color: var(--help-ink); }
+.unverified { margin: 0; font-size: 0.88rem; color: var(--help-ink); }
+.actual-ruler { display: flex; flex-direction: column; gap: 6px; overflow-x: auto; }
+
+/* Calibration */
+.cal { display: flex; flex-direction: column; gap: 14px; }
+.cal p { margin: 0; }
+.cal-stage { display: flex; justify-content: flex-start; overflow: hidden; }
+.cal-card {
+  flex: none; max-height: 52vh;
+  border: 2px solid var(--accent); border-radius: 3mm;
+  background: repeating-linear-gradient(135deg, transparent 0 10px, var(--mat-line) 10px 11px);
+  display: flex; align-items: flex-start; justify-content: center;
+}
+.cal-card span { margin-top: 8px; font-size: 0.8rem; font-weight: 700; color: var(--accent); }
+.cal-controls { display: flex; align-items: center; gap: 10px; }
+.cal-slider { flex: 1; display: flex; }
+.cal-slider input { width: 100%; accent-color: var(--accent); }
+
+/* Phones held sideways: stage and sheet side by side */
+@media (orientation: landscape) and (max-height: 520px) {
+  .bench { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+  .stage {
+    position: sticky; top: calc(env(safe-area-inset-top, 0px) + var(--bar-h));
+    height: calc(100dvh - var(--bar-h) - env(safe-area-inset-top, 0px));
+    border-right: 1px solid var(--line); border-bottom: 0;
+  }
+  .actions { position: static; margin-inline: 0; padding: 0; border-top: 0; }
+  .viewer-hint { display: none; }
+  .sheet { padding-inline: 16px; }
 }

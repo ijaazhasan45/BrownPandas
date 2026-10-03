@@ -11,7 +11,8 @@ demo. Edit `scripts/write-guide.mjs`, run `node scripts/write-guide.mjs`, then `
 | 3 | Is protecting the surface (blanket/box) shown? The prepare step is tagged "From the manual". If not shown, change its basis to `supplementary_guidance`. | `prepare` step `source.basis` |
 | 4 | Part number 115980 × 4. | parts list, prepare substep |
 | 5 | Usage notes on the completion screen: "Don't sit on the table" and the 22 lb (10 kg) load limit came from a text read of the PDF. Confirm the wording and number. | `usageNotes` |
-| 6 | Corner numbering is the app's own (1 front-left, 2 front-right, 3 back-right, 4 back-left, viewed from above with the underside up). The manual doesn't number corners; keep it consistent. | `sceneStates.ts` `CORNERS` |
+| 6 | **Measure a real 115980** (length and diameter, in mm) and update `hardware` in the generator, then set `sizeVerified: true`. The actual-size view and the 3D fastener use an estimate (60 × 6 mm) until then. | `scripts/write-guide.mjs` `hardware`; `sceneStates.ts` `DIM` |
+| 7 | Corner numbering is the app's own (1 front-left, 2 front-right, 3 back-right, 4 back-left, viewed from above with the underside up). The manual doesn't number corners; keep it consistent. | `sceneStates.ts` `CORNERS` |
 
 Turn counts and depths in the animations are illustrative. Don't present them as
 specifications.
