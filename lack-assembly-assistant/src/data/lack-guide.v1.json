@@ -1,0 +1,661 @@
+{
+  "schemaVersion": 1,
+  "id": "lack-aa2606170-v1",
+  "productId": "ikea-lack-30449908",
+  "productName": "LACK side table, white, 21 5/8 x 21 5/8\"",
+  "productArticleNumber": "304.499.08",
+  "manualDocumentId": "AA-2606170-1",
+  "manualUrl": "https://www.ikea.com/us/en/assembly_instructions/lack-side-table-white__AA-2606170-1-100.pdf",
+  "guideVersion": "1.0.0",
+  "parts": [
+    {
+      "id": "tabletop",
+      "label": "Tabletop"
+    },
+    {
+      "id": "leg-1",
+      "label": "Leg 1 (front-left)"
+    },
+    {
+      "id": "leg-2",
+      "label": "Leg 2 (front-right)"
+    },
+    {
+      "id": "leg-3",
+      "label": "Leg 3 (back-right)"
+    },
+    {
+      "id": "leg-4",
+      "label": "Leg 4 (back-left)"
+    },
+    {
+      "id": "fastener-1",
+      "label": "Fastener 1 (part 115980)"
+    },
+    {
+      "id": "fastener-2",
+      "label": "Fastener 2 (part 115980)"
+    },
+    {
+      "id": "fastener-3",
+      "label": "Fastener 3 (part 115980)"
+    },
+    {
+      "id": "fastener-4",
+      "label": "Fastener 4 (part 115980)"
+    }
+  ],
+  "steps": [
+    {
+      "id": "prepare",
+      "order": 0,
+      "title": "Lay out the parts",
+      "instruction": "Spread a blanket or the flattened box on the floor. Lay the tabletop on it with the finished top facing down, so the side with a hole near each corner faces up. Set the four legs and four fasteners beside it.",
+      "completionCheck": "The tabletop lies on a soft surface with four corner holes facing up, and you have four legs and four fasteners.",
+      "source": {
+        "documentId": "AA-2606170-1",
+        "page": 1,
+        "basis": "manual_diagram"
+      },
+      "animationId": "prepare-overview",
+      "highlightedPartIds": [
+        "tabletop"
+      ],
+      "skills": [
+        "part_identification",
+        "part_orientation"
+      ],
+      "substeps": [
+        {
+          "id": "prepare-identify",
+          "instruction": "Find the parts: one large square tabletop, four square legs, and four short metal fasteners threaded at both ends (part 115980).",
+          "animationId": "prepare-overview",
+          "highlightedPartIds": [
+            "leg-1",
+            "leg-2",
+            "leg-3",
+            "leg-4",
+            "fastener-1",
+            "fastener-2",
+            "fastener-3",
+            "fastener-4"
+          ],
+          "skills": [
+            "part_identification"
+          ]
+        },
+        {
+          "id": "prepare-protect",
+          "instruction": "Put down a blanket or the flattened cardboard box so the finished top doesn't get scratched.",
+          "animationId": "prepare-overview",
+          "highlightedPartIds": [
+            "tabletop"
+          ],
+          "skills": [
+            "part_orientation"
+          ]
+        },
+        {
+          "id": "prepare-flip",
+          "instruction": "Lay the tabletop finished side down. You should now see a hole near each corner.",
+          "animationId": "prepare-overview",
+          "highlightedPartIds": [
+            "tabletop"
+          ],
+          "skills": [
+            "part_orientation"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fastener-1",
+      "order": 1,
+      "title": "Start the first fastener",
+      "instruction": "Set one end of a fastener into the front-left corner hole and turn it clockwise by hand until it holds firmly and stands straight up. The other threaded end stays exposed for the leg.",
+      "completionCheck": "The fastener stands straight up in the front-left hole, doesn't wobble, and its other end sticks out.",
+      "source": {
+        "documentId": "AA-2606170-1",
+        "page": 1,
+        "basis": "manual_diagram"
+      },
+      "animationId": "fastener-1-insert",
+      "highlightedPartIds": [
+        "fastener-1",
+        "tabletop"
+      ],
+      "skills": [
+        "fastener_alignment",
+        "hand_tightening"
+      ],
+      "substeps": [
+        {
+          "id": "fastener-1-align",
+          "instruction": "Hold the fastener upright and set one threaded end into the front-left hole. Keep it straight up and down, not tilted.",
+          "animationId": "fastener-1-align",
+          "highlightedPartIds": [
+            "fastener-1",
+            "tabletop"
+          ],
+          "skills": [
+            "fastener_alignment"
+          ]
+        },
+        {
+          "id": "fastener-1-start",
+          "instruction": "Turn it clockwise by hand. If it doesn't catch within one turn, lift it out and set it straight again instead of pushing harder.",
+          "animationId": "fastener-1-start",
+          "highlightedPartIds": [
+            "fastener-1"
+          ],
+          "skills": [
+            "fastener_alignment",
+            "hand_tightening"
+          ]
+        },
+        {
+          "id": "fastener-1-tighten",
+          "instruction": "Keep turning until it holds firmly. Stop when it gets hard to turn. Don't use tools or force it.",
+          "animationId": "fastener-1-tighten",
+          "highlightedPartIds": [
+            "fastener-1"
+          ],
+          "skills": [
+            "hand_tightening"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "leg-1",
+      "order": 2,
+      "title": "Attach the first leg",
+      "instruction": "Hold a leg straight up with its hole facing down over the fastener in the front-left corner. Turn the leg clockwise by hand until it sits flat against the tabletop.",
+      "completionCheck": "The leg sits flat against the tabletop with no gap and doesn't wobble when you push it gently.",
+      "source": {
+        "documentId": "AA-2606170-1",
+        "page": 1,
+        "basis": "manual_diagram"
+      },
+      "animationId": "leg-1-attach",
+      "highlightedPartIds": [
+        "leg-1",
+        "fastener-1"
+      ],
+      "skills": [
+        "leg_alignment",
+        "hand_tightening"
+      ],
+      "substeps": [
+        {
+          "id": "leg-1-align",
+          "instruction": "Find the hole in one end of the leg. Hold the leg straight up and lower that hole onto the fastener sticking out of the front-left corner.",
+          "animationId": "leg-1-align",
+          "highlightedPartIds": [
+            "leg-1",
+            "fastener-1"
+          ],
+          "skills": [
+            "leg_alignment"
+          ]
+        },
+        {
+          "id": "leg-1-start",
+          "instruction": "Keep the leg straight up and down as you start turning it clockwise. If it tilts or scrapes, lift it off and line it up again.",
+          "animationId": "leg-1-start",
+          "highlightedPartIds": [
+            "leg-1",
+            "fastener-1"
+          ],
+          "skills": [
+            "leg_alignment",
+            "hand_tightening"
+          ]
+        },
+        {
+          "id": "leg-1-tighten",
+          "instruction": "Keep turning until the end of the leg sits flat on the tabletop. Stop when it's snug; don't force it.",
+          "animationId": "leg-1-tighten",
+          "highlightedPartIds": [
+            "leg-1"
+          ],
+          "skills": [
+            "hand_tightening"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fastener-2",
+      "order": 3,
+      "title": "Start the second fastener",
+      "instruction": "Set one end of a fastener into the front-right corner hole and turn it clockwise by hand until it holds firmly and stands straight up. The other threaded end stays exposed for the leg.",
+      "completionCheck": "The fastener stands straight up in the front-right hole, doesn't wobble, and its other end sticks out.",
+      "source": {
+        "documentId": "AA-2606170-1",
+        "page": 1,
+        "basis": "manual_diagram"
+      },
+      "animationId": "fastener-2-insert",
+      "highlightedPartIds": [
+        "fastener-2",
+        "tabletop"
+      ],
+      "skills": [
+        "fastener_alignment",
+        "hand_tightening"
+      ],
+      "substeps": [
+        {
+          "id": "fastener-2-align",
+          "instruction": "Hold the fastener upright and set one threaded end into the front-right hole. Keep it straight up and down, not tilted.",
+          "animationId": "fastener-2-align",
+          "highlightedPartIds": [
+            "fastener-2",
+            "tabletop"
+          ],
+          "skills": [
+            "fastener_alignment"
+          ]
+        },
+        {
+          "id": "fastener-2-start",
+          "instruction": "Turn it clockwise by hand. If it doesn't catch within one turn, lift it out and set it straight again instead of pushing harder.",
+          "animationId": "fastener-2-start",
+          "highlightedPartIds": [
+            "fastener-2"
+          ],
+          "skills": [
+            "fastener_alignment",
+            "hand_tightening"
+          ]
+        },
+        {
+          "id": "fastener-2-tighten",
+          "instruction": "Keep turning until it holds firmly. Stop when it gets hard to turn. Don't use tools or force it.",
+          "animationId": "fastener-2-tighten",
+          "highlightedPartIds": [
+            "fastener-2"
+          ],
+          "skills": [
+            "hand_tightening"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "leg-2",
+      "order": 4,
+      "title": "Attach the second leg",
+      "instruction": "Hold a leg straight up with its hole facing down over the fastener in the front-right corner. Turn the leg clockwise by hand until it sits flat against the tabletop.",
+      "completionCheck": "The leg sits flat against the tabletop with no gap and doesn't wobble when you push it gently.",
+      "source": {
+        "documentId": "AA-2606170-1",
+        "page": 1,
+        "basis": "manual_diagram"
+      },
+      "animationId": "leg-2-attach",
+      "highlightedPartIds": [
+        "leg-2",
+        "fastener-2"
+      ],
+      "skills": [
+        "leg_alignment",
+        "hand_tightening"
+      ],
+      "substeps": [
+        {
+          "id": "leg-2-align",
+          "instruction": "Find the hole in one end of the leg. Hold the leg straight up and lower that hole onto the fastener sticking out of the front-right corner.",
+          "animationId": "leg-2-align",
+          "highlightedPartIds": [
+            "leg-2",
+            "fastener-2"
+          ],
+          "skills": [
+            "leg_alignment"
+          ]
+        },
+        {
+          "id": "leg-2-start",
+          "instruction": "Keep the leg straight up and down as you start turning it clockwise. If it tilts or scrapes, lift it off and line it up again.",
+          "animationId": "leg-2-start",
+          "highlightedPartIds": [
+            "leg-2",
+            "fastener-2"
+          ],
+          "skills": [
+            "leg_alignment",
+            "hand_tightening"
+          ]
+        },
+        {
+          "id": "leg-2-tighten",
+          "instruction": "Keep turning until the end of the leg sits flat on the tabletop. Stop when it's snug; don't force it.",
+          "animationId": "leg-2-tighten",
+          "highlightedPartIds": [
+            "leg-2"
+          ],
+          "skills": [
+            "hand_tightening"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fastener-3",
+      "order": 5,
+      "title": "Start the third fastener",
+      "instruction": "Set one end of a fastener into the back-right corner hole and turn it clockwise by hand until it holds firmly and stands straight up. The other threaded end stays exposed for the leg.",
+      "completionCheck": "The fastener stands straight up in the back-right hole, doesn't wobble, and its other end sticks out.",
+      "source": {
+        "documentId": "AA-2606170-1",
+        "page": 1,
+        "basis": "manual_diagram"
+      },
+      "animationId": "fastener-3-insert",
+      "highlightedPartIds": [
+        "fastener-3",
+        "tabletop"
+      ],
+      "skills": [
+        "fastener_alignment",
+        "hand_tightening"
+      ],
+      "substeps": [
+        {
+          "id": "fastener-3-align",
+          "instruction": "Hold the fastener upright and set one threaded end into the back-right hole. Keep it straight up and down, not tilted.",
+          "animationId": "fastener-3-align",
+          "highlightedPartIds": [
+            "fastener-3",
+            "tabletop"
+          ],
+          "skills": [
+            "fastener_alignment"
+          ]
+        },
+        {
+          "id": "fastener-3-start",
+          "instruction": "Turn it clockwise by hand. If it doesn't catch within one turn, lift it out and set it straight again instead of pushing harder.",
+          "animationId": "fastener-3-start",
+          "highlightedPartIds": [
+            "fastener-3"
+          ],
+          "skills": [
+            "fastener_alignment",
+            "hand_tightening"
+          ]
+        },
+        {
+          "id": "fastener-3-tighten",
+          "instruction": "Keep turning until it holds firmly. Stop when it gets hard to turn. Don't use tools or force it.",
+          "animationId": "fastener-3-tighten",
+          "highlightedPartIds": [
+            "fastener-3"
+          ],
+          "skills": [
+            "hand_tightening"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "leg-3",
+      "order": 6,
+      "title": "Attach the third leg",
+      "instruction": "Hold a leg straight up with its hole facing down over the fastener in the back-right corner. Turn the leg clockwise by hand until it sits flat against the tabletop.",
+      "completionCheck": "The leg sits flat against the tabletop with no gap and doesn't wobble when you push it gently.",
+      "source": {
+        "documentId": "AA-2606170-1",
+        "page": 1,
+        "basis": "manual_diagram"
+      },
+      "animationId": "leg-3-attach",
+      "highlightedPartIds": [
+        "leg-3",
+        "fastener-3"
+      ],
+      "skills": [
+        "leg_alignment",
+        "hand_tightening"
+      ],
+      "substeps": [
+        {
+          "id": "leg-3-align",
+          "instruction": "Find the hole in one end of the leg. Hold the leg straight up and lower that hole onto the fastener sticking out of the back-right corner.",
+          "animationId": "leg-3-align",
+          "highlightedPartIds": [
+            "leg-3",
+            "fastener-3"
+          ],
+          "skills": [
+            "leg_alignment"
+          ]
+        },
+        {
+          "id": "leg-3-start",
+          "instruction": "Keep the leg straight up and down as you start turning it clockwise. If it tilts or scrapes, lift it off and line it up again.",
+          "animationId": "leg-3-start",
+          "highlightedPartIds": [
+            "leg-3",
+            "fastener-3"
+          ],
+          "skills": [
+            "leg_alignment",
+            "hand_tightening"
+          ]
+        },
+        {
+          "id": "leg-3-tighten",
+          "instruction": "Keep turning until the end of the leg sits flat on the tabletop. Stop when it's snug; don't force it.",
+          "animationId": "leg-3-tighten",
+          "highlightedPartIds": [
+            "leg-3"
+          ],
+          "skills": [
+            "hand_tightening"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fastener-4",
+      "order": 7,
+      "title": "Start the fourth fastener",
+      "instruction": "Set one end of a fastener into the back-left corner hole and turn it clockwise by hand until it holds firmly and stands straight up. The other threaded end stays exposed for the leg.",
+      "completionCheck": "The fastener stands straight up in the back-left hole, doesn't wobble, and its other end sticks out.",
+      "source": {
+        "documentId": "AA-2606170-1",
+        "page": 1,
+        "basis": "manual_diagram"
+      },
+      "animationId": "fastener-4-insert",
+      "highlightedPartIds": [
+        "fastener-4",
+        "tabletop"
+      ],
+      "skills": [
+        "fastener_alignment",
+        "hand_tightening"
+      ],
+      "substeps": [
+        {
+          "id": "fastener-4-align",
+          "instruction": "Hold the fastener upright and set one threaded end into the back-left hole. Keep it straight up and down, not tilted.",
+          "animationId": "fastener-4-align",
+          "highlightedPartIds": [
+            "fastener-4",
+            "tabletop"
+          ],
+          "skills": [
+            "fastener_alignment"
+          ]
+        },
+        {
+          "id": "fastener-4-start",
+          "instruction": "Turn it clockwise by hand. If it doesn't catch within one turn, lift it out and set it straight again instead of pushing harder.",
+          "animationId": "fastener-4-start",
+          "highlightedPartIds": [
+            "fastener-4"
+          ],
+          "skills": [
+            "fastener_alignment",
+            "hand_tightening"
+          ]
+        },
+        {
+          "id": "fastener-4-tighten",
+          "instruction": "Keep turning until it holds firmly. Stop when it gets hard to turn. Don't use tools or force it.",
+          "animationId": "fastener-4-tighten",
+          "highlightedPartIds": [
+            "fastener-4"
+          ],
+          "skills": [
+            "hand_tightening"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "leg-4",
+      "order": 8,
+      "title": "Attach the fourth leg",
+      "instruction": "Hold a leg straight up with its hole facing down over the fastener in the back-left corner. Turn the leg clockwise by hand until it sits flat against the tabletop.",
+      "completionCheck": "The leg sits flat against the tabletop with no gap and doesn't wobble when you push it gently.",
+      "source": {
+        "documentId": "AA-2606170-1",
+        "page": 1,
+        "basis": "manual_diagram"
+      },
+      "animationId": "leg-4-attach",
+      "highlightedPartIds": [
+        "leg-4",
+        "fastener-4"
+      ],
+      "skills": [
+        "leg_alignment",
+        "hand_tightening"
+      ],
+      "substeps": [
+        {
+          "id": "leg-4-align",
+          "instruction": "Find the hole in one end of the leg. Hold the leg straight up and lower that hole onto the fastener sticking out of the back-left corner.",
+          "animationId": "leg-4-align",
+          "highlightedPartIds": [
+            "leg-4",
+            "fastener-4"
+          ],
+          "skills": [
+            "leg_alignment"
+          ]
+        },
+        {
+          "id": "leg-4-start",
+          "instruction": "Keep the leg straight up and down as you start turning it clockwise. If it tilts or scrapes, lift it off and line it up again.",
+          "animationId": "leg-4-start",
+          "highlightedPartIds": [
+            "leg-4",
+            "fastener-4"
+          ],
+          "skills": [
+            "leg_alignment",
+            "hand_tightening"
+          ]
+        },
+        {
+          "id": "leg-4-tighten",
+          "instruction": "Keep turning until the end of the leg sits flat on the tabletop. Stop when it's snug; don't force it.",
+          "animationId": "leg-4-tighten",
+          "highlightedPartIds": [
+            "leg-4"
+          ],
+          "skills": [
+            "hand_tightening"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "upright",
+      "order": 9,
+      "title": "Turn the table over",
+      "instruction": "Lift the table by the tabletop, with a second person if you can, and turn it over so it stands on its legs. Set it down gently on all four legs at once.",
+      "completionCheck": "The table stands on all four legs with the finished top facing up.",
+      "source": {
+        "documentId": "AA-2606170-1",
+        "page": 1,
+        "basis": "supplementary_guidance"
+      },
+      "animationId": "table-upright",
+      "highlightedPartIds": [
+        "tabletop"
+      ],
+      "skills": [
+        "part_orientation"
+      ],
+      "substeps": [
+        {
+          "id": "upright-lift",
+          "instruction": "Hold the edges of the tabletop rather than the legs while you lift.",
+          "animationId": "table-upright",
+          "highlightedPartIds": [
+            "tabletop"
+          ],
+          "skills": [
+            "part_orientation"
+          ]
+        },
+        {
+          "id": "upright-set",
+          "instruction": "Turn it over and lower it so all four legs touch the floor together.",
+          "animationId": "table-upright",
+          "highlightedPartIds": [
+            "leg-1",
+            "leg-2",
+            "leg-3",
+            "leg-4"
+          ],
+          "skills": [
+            "part_orientation"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "final-check",
+      "order": 10,
+      "title": "Check the table",
+      "instruction": "Look at each leg from the side; each should sit flat against the tabletop. If one is loose, turn the table back over and tighten that leg by hand.",
+      "completionCheck": "All four legs are snug and the table doesn't rock when you press on a corner.",
+      "source": {
+        "documentId": "AA-2606170-1",
+        "page": 1,
+        "basis": "supplementary_guidance"
+      },
+      "animationId": "table-final",
+      "highlightedPartIds": [
+        "leg-1",
+        "leg-2",
+        "leg-3",
+        "leg-4"
+      ],
+      "skills": [],
+      "substeps": [
+        {
+          "id": "final-press",
+          "instruction": "Press gently on each corner of the top. The table should stay steady.",
+          "animationId": "table-final",
+          "highlightedPartIds": [
+            "tabletop"
+          ],
+          "skills": []
+        }
+      ]
+    }
+  ],
+  "usageNotes": [
+    "Don't sit on the table.",
+    "Keep the load on the tabletop to 22 lb (10 kg) or less."
+  ]
+}
